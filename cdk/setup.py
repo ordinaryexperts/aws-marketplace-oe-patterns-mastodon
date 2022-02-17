@@ -20,25 +20,8 @@ setuptools.setup(
     packages=setuptools.find_packages(where="mastodon"),
 
     install_requires=[
-        f"aws-cdk.aws-autoscaling=={CDK_VERSION}",
-        f"aws-cdk.aws-cloudformation=={CDK_VERSION}",
-        f"aws-cdk.aws-cloudwatch=={CDK_VERSION}",
-        f"aws-cdk.aws-codebuild=={CDK_VERSION}",
-        f"aws-cdk.aws-codedeploy=={CDK_VERSION}",
-        f"aws-cdk.aws-codepipeline-actions=={CDK_VERSION}",
-        f"aws-cdk.aws-codepipeline=={CDK_VERSION}",
-        f"aws-cdk.aws-ec2=={CDK_VERSION}",
-        f"aws-cdk.aws-efs=={CDK_VERSION}",
-        f"aws-cdk.aws-elasticloadbalancingv2=={CDK_VERSION}",
-        f"aws-cdk.aws-iam=={CDK_VERSION}",
-        f"aws-cdk.aws-lambda=={CDK_VERSION}",
-        f"aws-cdk.aws-rds=={CDK_VERSION}",
-        f"aws-cdk.aws-route53=={CDK_VERSION}",
-        f"aws-cdk.aws-s3=={CDK_VERSION}",
-        f"aws-cdk.aws-secretsmanager=={CDK_VERSION}",
-        f"aws-cdk.aws-sns=={CDK_VERSION}",
-        f"aws-cdk.aws-ssm=={CDK_VERSION}",
         f"aws-cdk.core=={CDK_VERSION}",
+        f"aws-cdk.assertions=={CDK_VERSION}",
         f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@2.0.2"
     ],
 
