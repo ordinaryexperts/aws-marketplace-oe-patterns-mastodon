@@ -15,6 +15,13 @@ from mastodon.mastodon_stack import MastodonStack
 env_oe_patterns_dev_us_east_1 = cdk.Environment(account="992593896645", region="us-east-1")
 
 app = cdk.App()
-MastodonStack(app, "oe-patterns-mastodon-{}".format(os.environ['USER']), env=env_oe_patterns_dev_us_east_1)
+MastodonStack(
+    app,
+    "oe-patterns-mastodon-{}".format(os.environ['USER']),
+    env=env_oe_patterns_dev_us_east_1,
+    synthesizer=cdk.DefaultStackSynthesizer(
+        generate_bootstrap_version_rule=False
+    )
+)
 
 app.synth()

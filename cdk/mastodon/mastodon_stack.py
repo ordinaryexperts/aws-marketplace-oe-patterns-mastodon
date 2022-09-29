@@ -30,22 +30,6 @@ class MastodonStack(Stack):
             "Vpc"
         )
 
-        # cloudwatch
-        app_log_group = aws_logs.CfnLogGroup(
-            self,
-            "AppLogGroup",
-            retention_in_days=TWO_YEARS_IN_DAYS
-        )
-        app_log_group.cfn_options.update_replace_policy = CfnDeletionPolicy.RETAIN
-        app_log_group.cfn_options.deletion_policy = CfnDeletionPolicy.RETAIN
-        system_log_group = aws_logs.CfnLogGroup(
-            self,
-            "SystemLogGroup",
-            retention_in_days=TWO_YEARS_IN_DAYS
-        )
-        system_log_group.cfn_options.update_replace_policy = CfnDeletionPolicy.RETAIN
-        system_log_group.cfn_options.deletion_policy = CfnDeletionPolicy.RETAIN
-
         # asg
         with open("mastodon/launch_config_user_data.sh") as f:
             launch_config_user_data = f.read()
@@ -53,10 +37,6 @@ class MastodonStack(Stack):
             self,
             "Asg",
             default_instance_type = "t3.xlarge",
-            log_group_arns = [
-                app_log_group.attr_arn,
-                system_log_group.attr_arn
-            ],
             user_data_contents=launch_config_user_data,
             user_data_variables = {},
             vpc=vpc
