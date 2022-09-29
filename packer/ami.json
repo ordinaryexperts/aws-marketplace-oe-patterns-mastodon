@@ -18,7 +18,17 @@
     {
       "type": "shell",
       "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "./packer/setup.sh"
+      "script": "./packer/ubuntu_2004_preinstall.sh"
+    },
+    {
+      "type": "shell",
+      "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "./packer/ubuntu_2004_appinstall.sh"
+    },
+    {
+      "type": "shell",
+      "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "./packer/ubuntu_2004_postinstall.sh"
     }
   ],
   "post-processors": [
