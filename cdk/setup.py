@@ -3,8 +3,7 @@ import setuptools
 with open("README.md") as fp:
     long_description = fp.read()
 
-# this is also set in setup-env.sh
-CDK_VERSION="1.148.0"
+CDK_VERSION="2.20.0"
 
 setuptools.setup(
     name="mastodon",
@@ -20,9 +19,9 @@ setuptools.setup(
     packages=setuptools.find_packages(where="mastodon"),
 
     install_requires=[
-        f"aws-cdk.core=={CDK_VERSION}",
-        f"aws-cdk.assertions=={CDK_VERSION}",
-        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@2.0.2"
+        f"aws-cdk-lib=={CDK_VERSION}",
+        f"constructs>=10.0.0,<11.0.0",
+        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@f36415167a3faed464975e967c1ff0c9ac98588c"
     ],
 
     python_requires=">=3.6",
