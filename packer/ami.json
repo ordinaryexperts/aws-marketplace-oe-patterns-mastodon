@@ -8,7 +8,7 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-02fe94dee086c0c37",
+      "source_ami": "ami-0c1704bac156af62c",
       "instance_type": "m5.xlarge",
       "ssh_username": "ubuntu",
       "ami_name": "ordinary-experts-patterns-mastodon-{{user `version`}}-{{isotime \"20060102-0304\"}}"
