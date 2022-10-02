@@ -1,20 +1,145 @@
 #!/bin/bash
 
+# aws cloudwatch
+cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "root",
+    "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log"
+  },
+  "metrics": {
+    "metrics_collected": {
+      "collectd": {
+        "metrics_aggregation_interval": 60
+      },
+      "disk": {
+        "measurement": ["used_percent"],
+        "metrics_collection_interval": 60,
+        "resources": ["*"]
+      },
+      "mem": {
+        "measurement": ["mem_used_percent"],
+        "metrics_collection_interval": 60
+      }
+    },
+    "append_dimensions": {
+      "ImageId": "\${!aws:ImageId}",
+      "InstanceId": "\${!aws:InstanceId}",
+      "InstanceType": "\${!aws:InstanceType}",
+      "AutoScalingGroupName": "\${!aws:AutoScalingGroupName}"
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/dpkg.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/dpkg.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/apt/history.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/apt/history.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/cloud-init.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/cloud-init.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/cloud-init-output.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/cloud-init-output.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/auth.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/auth.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/syslog",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/syslog",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/amazon/ssm/amazon-ssm-agent.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/amazon/ssm/amazon-ssm-agent.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/amazon/ssm/errors.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/amazon/ssm/errors.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/nginx/access.log",
+            "log_group_name": "${AsgAppLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/nginx/access.log",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/nginx/error.log",
+            "log_group_name": "${AsgSystemLogGroup}",
+            "log_stream_name": "{instance_id}-/var/log/nginx/error.log",
+            "timezone": "UTC"
+          }
+        ]
+      }
+    },
+    "log_stream_name": "{instance_id}"
+  }
+}
+EOF
+systemctl enable amazon-cloudwatch-agent
+systemctl start amazon-cloudwatch-agent
+
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -keyout /etc/ssl/private/nginx-selfsigned.key \
   -out /etc/ssl/certs/nginx-selfsigned.crt \
   -subj '/CN=localhost'
 
-mkdir -p /opt/oe/patterns/mastodon
+mkdir -p /opt/oe/patterns
+
+# secretsmanager
+SECRET_ARN="${DbSecretArn}"
+echo $SECRET_ARN > /opt/oe/patterns/secret-arn.txt
+SECRET_NAME=$(aws secretsmanager list-secrets --query "SecretList[?ARN=='$SECRET_ARN'].Name" --output text)
+echo $SECRET_NAME > /opt/oe/patterns/secret-name.txt
+
+aws ssm get-parameter \
+    --name "/aws/reference/secretsmanager/$SECRET_NAME" \
+    --with-decryption \
+    --query Parameter.Value \
+| jq -r . > /opt/oe/patterns/secret.json
+
+DB_PASSWORD=$(cat /opt/oe/patterns/secret.json | jq -r .password)
+DB_USERNAME=$(cat /opt/oe/patterns/secret.json | jq -r .username)
 
 # hostname
 aws ssm get-parameter \
     --name "${HostnameParameterName}" \
     --with-decryption \
     --query Parameter.Value \
-| jq -r . > /opt/oe/patterns/mastodon/hostname.txt
+| jq -r . > /opt/oe/patterns/hostname.txt
 
-HOSTNAME=$(cat /opt/oe/patterns/mastodon/hostname.txt)
+HOSTNAME=$(cat /opt/oe/patterns/hostname.txt)
 cat <<EOF > /etc/nginx/sites-available/mastodon
 map \$http_upgrade \$connection_upgrade {
   default upgrade;
@@ -131,11 +256,11 @@ SECRET_KEY_BASE=TODO
 OTP_SECRET=TODO
 VAPID_PRIVATE_KEY=TODO
 VAPID_PUBLIC_KEY=TODO
-DB_HOST=/var/run/postgresql
-DB_PORT=5432
+DB_HOST=${DbCluster.Endpoint.Address}
+DB_PORT=${DbCluster.Endpoint.Port}
 DB_NAME=mastodon_production
-DB_USER=mastodon
-DB_PASS=
+DB_USER=$DB_USERNAME
+DB_PASS=$DB_PASSWORD
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
@@ -152,5 +277,6 @@ service nginx restart
 # this is safe to re-reun as it will check if the db has already been setup...
 su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup"
 
+echo 'test'
 success=$?
 cfn-signal --exit-code $success --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
