@@ -132,6 +132,15 @@ aws ssm get-parameter \
 DB_PASSWORD=$(cat /opt/oe/patterns/secret.json | jq -r .password)
 DB_USERNAME=$(cat /opt/oe/patterns/secret.json | jq -r .username)
 
+aws ssm get-parameter \
+    --name "/aws/reference/secretsmanager/${SmtpCredentialsSecretName}" \
+    --with-decryption \
+    --query Parameter.Value \
+| jq -r . > /opt/oe/patterns/smtp.json
+
+SMTP_PASSWORD=$(cat /opt/oe/patterns/smtp.json | jq -r .password)
+SMTP_USERNAME=$(cat /opt/oe/patterns/smtp.json | jq -r .username)
+
 # hostname
 aws ssm get-parameter \
     --name "${HostnameParameterName}" \
@@ -260,23 +269,25 @@ DB_HOST=${DbCluster.Endpoint.Address}
 DB_PORT=${DbCluster.Endpoint.Port}
 DB_NAME=mastodon_production
 DB_USER=$DB_USERNAME
-DB_PASS=$DB_PASSWORD
+DB_PASS="$DB_PASSWORD"
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
-SMTP_SERVER=localhost
-SMTP_PORT=25
-SMTP_AUTH_METHOD=none
+SMTP_SERVER=email-smtp.${AWS::Region}.amazonaws.com
+SMTP_PORT=587
+SMTP_LOGIN=$SMTP_USERNAME
+SMTP_PASSWORD="$SMTP_PASSWORD"
+SMTP_AUTH_METHOD=login
 SMTP_OPENSSL_VERIFY_MODE=none
-SMTP_FROM_ADDRESS='Mastodon <notifications@mastodon-dylan.dev.patterns.ordinaryexperts.com>'
+SMTP_FROM_ADDRESS='${MastodonName} <${MastodonEmail}>'
 EOF
 
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon
 service nginx restart
 
-# this is safe to re-reun as it will check if the db has already been setup...
+# this is safe to re-run as it will check if the db has already been setup...
 su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup"
 
-echo 'test'
+systemctl restart mastodon-web mastodon-sidekiq mastodon-streaming
 success=$?
 cfn-signal --exit-code $success --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
