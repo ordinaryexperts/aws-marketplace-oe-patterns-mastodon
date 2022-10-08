@@ -133,13 +133,14 @@ DB_PASSWORD=$(cat /opt/oe/patterns/secret.json | jq -r .password)
 DB_USERNAME=$(cat /opt/oe/patterns/secret.json | jq -r .username)
 
 aws ssm get-parameter \
-    --name "/aws/reference/secretsmanager/${SmtpCredentialsSecretName}" \
+    --name "/aws/reference/secretsmanager/${InstanceSecretName}" \
     --with-decryption \
     --query Parameter.Value \
-| jq -r . > /opt/oe/patterns/smtp.json
+| jq -r . > /opt/oe/patterns/instance.json
 
-SMTP_PASSWORD=$(cat /opt/oe/patterns/smtp.json | jq -r .password)
-SMTP_USERNAME=$(cat /opt/oe/patterns/smtp.json | jq -r .username)
+SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
+ACCESS_KEY_ID=$(cat /opt/oe/patterns/instance.json | jq -r .access_key_id)
+SECRET_ACCESS_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .secret_access_key)
 
 # hostname
 aws ssm get-parameter \
@@ -273,13 +274,20 @@ DB_PASS="$DB_PASSWORD"
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
+S3_ENABLED=true
+S3_BUCKET=${AssetsBucket}
+S3_PROTOCOL=https
+AWS_ACCESS_KEY_ID=$ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY=$SECRET_ACCESS_KEY
+S3_REGION=${AWS::Region}
+S3_HOSTNAME=s3.${AWS::Region}.amazonaws.com
 SMTP_SERVER=email-smtp.${AWS::Region}.amazonaws.com
 SMTP_PORT=587
-SMTP_LOGIN=$SMTP_USERNAME
+SMTP_LOGIN=$ACCESS_KEY_ID
 SMTP_PASSWORD="$SMTP_PASSWORD"
 SMTP_AUTH_METHOD=login
 SMTP_OPENSSL_VERIFY_MODE=none
-SMTP_FROM_ADDRESS='${MastodonName} <${MastodonEmail}>'
+SMTP_FROM_ADDRESS='${Name} <${Email}>'
 EOF
 
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon

@@ -1,16 +1,21 @@
 import os
 
 from aws_cdk import (
+    Arn,
+    ArnComponents,
     Aws,
     aws_iam,
     aws_lambda,
     aws_logs,
+    aws_s3,
     aws_secretsmanager,
     aws_ses,
+    CfnCondition,
     CfnDeletionPolicy,
     CfnMapping,
     CfnParameter,
     CustomResource,
+    Fn,
     Stack,
     Token
 )
@@ -42,31 +47,78 @@ class MastodonStack(Stack):
             "Vpc"
         )
 
-        self.mastodon_name_param = CfnParameter(
+        self.name_param = CfnParameter(
             self,
-            "MastodonName",
+            "Name",
             default="Mastodon",
             description="The name of this Mastodon site."
         )
-        self.mastodon_name_param.override_logical_id("MastodonName")
-        self.mastodon_email_param = CfnParameter(
+        self.name_param.override_logical_id("Name")
+        self.email_param = CfnParameter(
             self,
-            "MastodonEmail",
+            "Email",
             description="The email address of this Mastodon site. This will be set up as an SES identity."
         )
-        self.mastodon_email_param.override_logical_id("MastodonEmail")
-
-        # ses
-        self.mastodon_email_identity = aws_ses.CfnEmailIdentity(
+        self.email_param.override_logical_id("Email")
+        self.assets_bucket_name_param = CfnParameter(
             self,
-            "MastodonEmailIdentity",
-            email_identity=self.mastodon_email_param.value_as_string
+            "AssetsBucketName",
+            default="",
+            description="The name of the S3 bucket to store uploaded assets. If not specified, a bucket will be created."
+        )
+        self.assets_bucket_name_param.override_logical_id("AssetsBucketName")
+
+        self.assets_bucket_name_not_exists_condition = CfnCondition(
+            self,
+            "AssetsBucketNameNotExists",
+            expression=Fn.condition_equals(self.assets_bucket_name_param.value, "")
         )
 
-        # iam user for ses
-        self.ses_user = aws_iam.CfnUser(
+        self.assets_bucket = aws_s3.CfnBucket(
             self,
-            "SesUser",
+            "AssetsBucket",
+            access_control="Private",
+            bucket_encryption=aws_s3.CfnBucket.BucketEncryptionProperty(
+                server_side_encryption_configuration=[
+                    aws_s3.CfnBucket.ServerSideEncryptionRuleProperty(
+                        server_side_encryption_by_default=aws_s3.CfnBucket.ServerSideEncryptionByDefaultProperty(
+                            sse_algorithm="AES256"
+                        )
+                    )
+                ]
+            ),
+        )
+        self.assets_bucket.cfn_options.condition=self.assets_bucket_name_not_exists_condition
+        self.assets_bucket.cfn_options.deletion_policy = CfnDeletionPolicy.RETAIN
+        self.assets_bucket.cfn_options.update_replace_policy = CfnDeletionPolicy.RETAIN
+        self.assets_bucket_arn = Arn.format(
+            components=ArnComponents(
+                account="",
+                region="",
+                resource=Token.as_string(
+                    Fn.condition_if(
+                        self.assets_bucket_name_not_exists_condition.logical_id,
+                        self.assets_bucket.ref,
+                        self.assets_bucket_name_param.value_as_string
+                    )
+                ),
+                resource_name="*",
+                service="s3"
+            ),
+            stack=self
+        )
+
+        # ses
+        self.email_identity = aws_ses.CfnEmailIdentity(
+            self,
+            "EmailIdentity",
+            email_identity=self.email_param.value_as_string
+        )
+
+        # iam user for ses and assets bucket from instance
+        self.instance_user = aws_iam.CfnUser(
+            self,
+            "InstanceUser",
             path="/",
             policies=[
                 aws_iam.CfnUser.PolicyProperty(
@@ -75,37 +127,62 @@ class MastodonStack(Stack):
                             aws_iam.PolicyStatement(
                                 effect=aws_iam.Effect.ALLOW,
                                 actions=[ "ses:SendRawEmail" ],
-                                resources=[f"arn:aws:ses:{Aws.REGION}:{Aws.ACCOUNT_ID}:identity/{self.mastodon_email_param.value_as_string}"]
+                                resources=[f"arn:aws:ses:{Aws.REGION}:{Aws.ACCOUNT_ID}:identity/{self.email_param.value_as_string}"]
                             )
                         ]
                     ),
                     policy_name="AllowSendRawEmail"
+                ),
+                aws_iam.CfnUser.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:*"
+                                ],
+                                resources=[ f"{self.assets_bucket_arn}/*" ]
+                            ),
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:ListBucket"
+                                ],
+                                resources=[ self.assets_bucket_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="AllowAssetsBucket"
                 )
             ],
-            user_name=f"{Aws.REGION}-{Aws.STACK_NAME}-ses"
+            user_name=f"{Aws.REGION}-{Aws.STACK_NAME}-instance"
         )
-        self.ses_user.override_logical_id("SesUser")
+        self.instance_user.override_logical_id("InstanceUser")
 
-        self.ses_user_access_key = aws_iam.AccessKey(
+        # actual creds are required to generate the SMTP password
+        # also Mastodon paperclip config expects an access key and secret
+        self.instance_user_access_key = aws_iam.AccessKey(
             self,
-            "SesUserAccessKey",
-            user=self.ses_user
+            "InstanceUserAccessKey",
+            user=self.instance_user
         )
+        self.instance_user_access_key.node.add_dependency(self.instance_user)
+
         lambda_code_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "lambda_ses_user_generate_smtp_password.py"
+            "lambda_generate_smtp_password.py"
         )
         with open(lambda_code_path) as f:
             lambda_code = f.read()
         self.generate_smtp_password_lambda = aws_lambda.Function(
             self,
-            "SesUserGenerateSMTPPasswordLambda",
+            "GenerateSMTPPasswordLambda",
             runtime=aws_lambda.Runtime.PYTHON_3_8,
             handler="index.handler",
             code=aws_lambda.Code.from_inline(lambda_code)
         )
-        self.generate_smtp_password_lambda.node.default_child.override_logical_id("SesUserGenerateSMTPPasswordLambda")
-        self.generate_smtp_password_lambda.role.node.default_child.override_logical_id("SesUserGenerateSMTPPasswordLambdaRole")
+        self.generate_smtp_password_lambda.node.default_child.override_logical_id("GenerateSMTPPasswordLambda")
+        self.generate_smtp_password_lambda.role.node.default_child.override_logical_id("GenerateSMTPPasswordLambdaRole")
 
         self.generate_smtp_password_lambda_secret_policy = aws_iam.Policy(
             self,
@@ -116,7 +193,7 @@ class MastodonStack(Stack):
                     resources=["*"],
                     conditions={
                         "StringEquals": {
-                            "secretsmanager:Name": [f"{Aws.STACK_NAME}/smtp/credentials"]
+                            "secretsmanager:Name": [f"{Aws.STACK_NAME}/instance/credentials"]
                         }
                     }
                 ),
@@ -126,18 +203,17 @@ class MastodonStack(Stack):
                 )
             ]
         )
-        self.generate_smtp_password_lambda_secret_policy.node.default_child.override_logical_id("SesUserCreateSecretPolicy")
+        self.generate_smtp_password_lambda_secret_policy.node.default_child.override_logical_id("InstanceUserCreateSecretPolicy")
         self.generate_smtp_password_lambda.role.attach_inline_policy(self.generate_smtp_password_lambda_secret_policy)
         self.generate_smtp_password_custom_resource = CustomResource(
             self,
             "GenerateSMTPPasswordCustomResource",
             service_token=self.generate_smtp_password_lambda.function_arn,
             properties={
-                "access_key_id": self.ses_user_access_key.access_key_id,
+                "access_key_id": self.instance_user_access_key.access_key_id,
                 "aws_region": Aws.REGION,
-                "secret_access_key": self.ses_user_access_key.secret_access_key,
-                "stack_name": Aws.STACK_NAME,
-                "test": "test4"
+                "secret_access_key": self.instance_user_access_key.secret_access_key,
+                "stack_name": Aws.STACK_NAME
             }
         )
         self.generate_smtp_password_custom_resource.node.default_child.override_logical_id("GenerateSMTPPasswordCustomResource")
@@ -160,7 +236,7 @@ class MastodonStack(Stack):
             user_data_variables = {
                 "DbSecretArn": db_secret.secret_arn(),
                 "HostnameParameterName": Aws.STACK_NAME + "-hostname",
-                "SmtpCredentialsSecretName": Aws.STACK_NAME + "/smtp/credentials"
+                "InstanceSecretName": Aws.STACK_NAME + "/instance/credentials"
             },
             vpc=vpc
         )

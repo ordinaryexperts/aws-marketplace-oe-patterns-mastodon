@@ -15,10 +15,10 @@ def handler(event, context):
         if event["RequestType"] == "Delete":
             cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
             return
-        key    = event["ResourceProperties"]["secret_access_key"]
-        region = event["ResourceProperties"]["aws_region"]
-        stack  = event["ResourceProperties"]["stack_name"]
-        user   = event["ResourceProperties"]["access_key_id"]
+        secret_access_key = event["ResourceProperties"]["secret_access_key"]
+        aws_region        = event["ResourceProperties"]["aws_region"]
+        stack_name        = event["ResourceProperties"]["stack_name"]
+        access_key_id     = event["ResourceProperties"]["access_key_id"]
 
         date     = "11111111"
         service  = "ses"
@@ -26,27 +26,27 @@ def handler(event, context):
         terminal = "aws4_request"
         version  = 0x04
 
-        signature = sign(("AWS4" + key).encode("utf-8"), date)
-        signature = sign(signature, region)
+        signature = sign(("AWS4" + secret_access_key).encode("utf-8"), date)
+        signature = sign(signature, aws_region)
         signature = sign(signature, service)
         signature = sign(signature, terminal)
         signature = sign(signature, message)
         signature_and_version = bytes([version]) + signature
         smtp_password = base64.b64encode(signature_and_version).decode("utf-8")
 
-        secret = { "username": user, "password": smtp_password }
+        secret = { "access_key_id": access_key_id, "smtp_password": smtp_password, "secret_access_key": secret_access_key }
         client = boto3.client("secretsmanager")
         responseData = {}
         try:
             response = client.create_secret(
-                Name=f"{stack}/smtp/credentials",
+                Name=f"{stack_name}/instance/credentials",
                 SecretString=json.dumps(secret)
             )        
             responseData = {"arn": response["ARN"]}
         except ClientError as e:
             if e.response["Error"]["Code"] == "ResourceExistsException":
                 response = client.list_secrets(
-                    Filters=[{"Key": "name", "Values": [f"{stack}/smtp/credentials"]}]
+                    Filters=[{"Key": "name", "Values": [f"{stack_name}/instance/credentials"]}]
                 )
                 responseData = {"arn": response["SecretList"][0]["ARN"]}
             else:
