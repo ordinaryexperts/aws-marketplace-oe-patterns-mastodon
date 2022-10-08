@@ -166,6 +166,7 @@ class MastodonStack(Stack):
             "InstanceUserAccessKey",
             user=self.instance_user
         )
+        self.instance_user_access_key.node.default_child.override_logical_id("InstanceUserAccessKey")
         self.instance_user_access_key.node.add_dependency(self.instance_user)
 
         lambda_code_path = os.path.join(
