@@ -11,7 +11,6 @@ deploy: build
 	--parameters AsgReprovisionString=20221008.1 \
 	--parameters DnsHostname=mastodon-${USER}.dev.patterns.ordinaryexperts.com \
 	--parameters DnsRoute53HostedZoneName=dev.patterns.ordinaryexperts.com \
-	--parameters Email=dylan@ordinaryexperts.com \
 	--parameters Name="OE Mastodon" \
 	--parameters VpcId=vpc-00425deda4c835455 \
 	--parameters VpcPrivateSubnet1Id=subnet-030c94b9795c6cb96 \

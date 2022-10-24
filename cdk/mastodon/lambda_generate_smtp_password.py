@@ -48,7 +48,17 @@ def handler(event, context):
                 response = client.list_secrets(
                     Filters=[{"Key": "name", "Values": [f"{stack_name}/instance/credentials"]}]
                 )
-                responseData = {"arn": response["SecretList"][0]["ARN"]}
+                arn = response["SecretList"][0]["ARN"]
+                response = client.get_secret_value(
+                    SecretId=arn
+                )
+                current_secret = json.loads(response["SecretString"])
+                if secret != current_secret:
+                    client.update_secret(
+                        SecretId=arn,
+                        SecretString=json.dumps(secret)
+                    )
+                responseData = {"arn": arn}
             else:
                 cfnresponse.send(event, context, cfnresponse.FAILED, {})
                 traceback.print_exc()

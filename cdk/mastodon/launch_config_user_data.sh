@@ -142,14 +142,6 @@ SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
 ACCESS_KEY_ID=$(cat /opt/oe/patterns/instance.json | jq -r .access_key_id)
 SECRET_ACCESS_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .secret_access_key)
 
-# hostname
-aws ssm get-parameter \
-    --name "${HostnameParameterName}" \
-    --with-decryption \
-    --query Parameter.Value \
-| jq -r . > /opt/oe/patterns/hostname.txt
-
-HOSTNAME=$(cat /opt/oe/patterns/hostname.txt)
 cat <<EOF > /etc/nginx/sites-available/mastodon
 map \$http_upgrade \$connection_upgrade {
   default upgrade;
@@ -169,7 +161,7 @@ proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=CACHE:10m inactive=7d max
 server {
   listen 443 ssl http2;
   listen [::]:443 ssl http2;
-  server_name $HOSTNAME;
+  server_name ${Hostname};
 
   ssl_protocols TLSv1.2 TLSv1.3;
   ssl_ciphers HIGH:!MEDIUM:!LOW:!aNULL:!NULL:!SHA;
@@ -260,7 +252,7 @@ server {
 EOF
 
 cat <<EOF > /home/mastodon/live/.env.production
-LOCAL_DOMAIN=$HOSTNAME
+LOCAL_DOMAIN=${Hostname}
 SINGLE_USER_MODE=false
 SECRET_KEY_BASE=TODO
 OTP_SECRET=TODO
@@ -287,7 +279,7 @@ SMTP_LOGIN=$ACCESS_KEY_ID
 SMTP_PASSWORD="$SMTP_PASSWORD"
 SMTP_AUTH_METHOD=login
 SMTP_OPENSSL_VERIFY_MODE=none
-SMTP_FROM_ADDRESS='${Name} <${Email}>'
+SMTP_FROM_ADDRESS='${Name} <no-reply@${HostedZoneName}>'
 EOF
 
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon

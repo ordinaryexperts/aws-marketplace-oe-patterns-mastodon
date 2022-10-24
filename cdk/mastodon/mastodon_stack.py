@@ -7,11 +7,13 @@ from aws_cdk import (
     aws_ec2,
     aws_iam,
     aws_lambda,
+    aws_route53,
     aws_s3,
     aws_ses,
     CfnCondition,
     CfnDeletionPolicy,
     CfnMapping,
+    CfnOutput,
     CfnParameter,
     CustomResource,
     Fn,
@@ -54,12 +56,6 @@ class MastodonStack(Stack):
             description="The name of this Mastodon site."
         )
         self.name_param.override_logical_id("Name")
-        self.email_param = CfnParameter(
-            self,
-            "Email",
-            description="The email address of this Mastodon site. This will be set up as an SES identity."
-        )
-        self.email_param.override_logical_id("Email")
         self.assets_bucket_name_param = CfnParameter(
             self,
             "AssetsBucketName",
@@ -108,11 +104,44 @@ class MastodonStack(Stack):
             stack=self
         )
 
-        # ses
-        self.email_identity = aws_ses.CfnEmailIdentity(
+        # dns
+        dns = Dns(self, "Dns")
+
+        # ses domain
+        self.domain_identity = aws_ses.CfnEmailIdentity(
             self,
-            "EmailIdentity",
-            email_identity=self.email_param.value_as_string
+            "DomainIdentity",
+            email_identity=dns.route_53_hosted_zone_name_param.value_as_string
+        )
+
+        self.dkim_dns_record_set1 = aws_route53.CfnRecordSet(
+            self,
+            "DkimDnsRecordSet1",
+            hosted_zone_name=f"{dns.route_53_hosted_zone_name_param.value_as_string}.",
+            name=Token.as_string(self.domain_identity.attr_dkim_dns_token_name1),
+            resource_records=[ self.domain_identity.attr_dkim_dns_token_value1 ],
+            ttl="300",
+            type="CNAME"
+        )
+
+        self.dkim_dns_record_set2 = aws_route53.CfnRecordSet(
+            self,
+            "DkimDnsRecordSet2",
+            hosted_zone_name=f"{dns.route_53_hosted_zone_name_param.value_as_string}.",
+            name=Token.as_string(self.domain_identity.attr_dkim_dns_token_name2),
+            resource_records=[ Token.as_string(self.domain_identity.attr_dkim_dns_token_value2) ],
+            ttl="300",
+            type="CNAME"
+        )
+
+        self.dkim_dns_record_set3 = aws_route53.CfnRecordSet(
+            self,
+            "DkimDnsRecordSet3",
+            hosted_zone_name=f"{dns.route_53_hosted_zone_name_param.value_as_string}.",
+            name=Token.as_string(self.domain_identity.attr_dkim_dns_token_name3),
+            resource_records=[ Token.as_string(self.domain_identity.attr_dkim_dns_token_value3) ],
+            ttl="300",
+            type="CNAME"
         )
 
         # iam user for ses and assets bucket from instance
@@ -126,12 +155,15 @@ class MastodonStack(Stack):
                         statements=[
                             aws_iam.PolicyStatement(
                                 effect=aws_iam.Effect.ALLOW,
-                                actions=[ "ses:SendRawEmail" ],
-                                resources=[f"arn:aws:ses:{Aws.REGION}:{Aws.ACCOUNT_ID}:identity/{self.email_param.value_as_string}"]
+                                actions=[
+                                    "ses:SendEmail",
+                                    "ses:SendRawEmail"
+                                ],
+                                resources=["*"]
                             )
                         ]
                     ),
-                    policy_name="AllowSendRawEmail"
+                    policy_name="AllowSendEmail"
                 ),
                 aws_iam.CfnUser.PolicyProperty(
                     policy_document=aws_iam.PolicyDocument(
@@ -190,7 +222,13 @@ class MastodonStack(Stack):
             "SecretPolicy",
             statements=[
                 aws_iam.PolicyStatement(
-                    actions=["secretsmanager:CreateSecret"],
+                    actions=["secretsmanager:ListSecrets"],
+                    resources=["*"]
+                ),
+                aws_iam.PolicyStatement(
+                    actions=[
+                        "secretsmanager:CreateSecret"
+                    ],
                     resources=["*"],
                     conditions={
                         "StringEquals": {
@@ -199,8 +237,13 @@ class MastodonStack(Stack):
                     }
                 ),
                 aws_iam.PolicyStatement(
-                    actions=["secretsmanager:ListSecrets"],
-                    resources=["*"]
+                    actions=[
+                        "secretsmanager:GetSecretValue",
+                        "secretsmanager:UpdateSecret"
+                    ],
+                    resources=[
+                        f"arn:{Aws.PARTITION}:secretsmanager:{Aws.REGION}:{Aws.ACCOUNT_ID}:secret:{Aws.STACK_NAME}/instance/credentials-*"
+                    ]
                 )
             ]
         )
@@ -243,7 +286,8 @@ class MastodonStack(Stack):
             user_data_contents=launch_config_user_data,
             user_data_variables = {
                 "DbSecretArn": db_secret.secret_arn(),
-                "HostnameParameterName": Aws.STACK_NAME + "-hostname",
+                "Hostname": dns.hostname(),
+                "HostedZoneName": dns.route_53_hosted_zone_name_param.value_as_string,
                 "InstanceSecretName": Aws.STACK_NAME + "/instance/credentials"
             },
             vpc=vpc
@@ -282,11 +326,12 @@ class MastodonStack(Stack):
         db = AuroraPostgresql(
             self,
             "Db",
-            asg=asg,
             db_secret=db_secret,
             vpc=vpc
         )
         asg.asg.node.add_dependency(db.db_primary_instance)
         asg.asg.node.add_dependency(self.generate_smtp_password_custom_resource)
+        db.add_asg_ingress(asg)
         
-        dns = Dns(self, "Dns", alb=alb)
+        dns.add_alb(alb)
+
