@@ -46,8 +46,24 @@ su - mastodon -c "cd /home/mastodon/live && OTP_SECRET=precompile_placeholder SE
 
 # set up services
 cp /home/mastodon/live/dist/mastodon-*.service /etc/systemd/system/
+# enable log files
+sed -i '/^\[Service\].*/a StandardOutput=file:/var/log/mastodon-web-output.log' /etc/systemd/system/mastodon-web.service
+sed -i '/^\[Service\].*/a StandardError=file:/var/log/mastodon-web-error.log' /etc/systemd/system/mastodon-web.service
+sed -i '/^\[Service\].*/a StandardOutput=file:/var/log/mastodon-sidekiq-output.log' /etc/systemd/system/mastodon-sidekiq.service
+sed -i '/^\[Service\].*/a StandardError=file:/var/log/mastodon-sidekiq-error.log' /etc/systemd/system/mastodon-sidekiq.service
+sed -i '/^\[Service\].*/a StandardOutput=file:/var/log/mastodon-streaming-output.log' /etc/systemd/system/mastodon-streaming.service
+sed -i '/^\[Service\].*/a StandardError=file:/var/log/mastodon-streaming-error.log' /etc/systemd/system/mastodon-streaming.service
+# TODO log rotation
+
 systemctl daemon-reload
 systemctl enable mastodon-web mastodon-sidekiq mastodon-streaming
 
+# set up crons
+cat <<EOF > /etc/cron.d/mastodon
+0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl media remove
+0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove
+EOF
+
 # remove default site
 rm -f /etc/nginx/sites-enabled/default
+

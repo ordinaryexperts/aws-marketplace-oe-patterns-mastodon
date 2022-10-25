@@ -96,13 +96,13 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
           },
           {
             "file_path": "/var/log/nginx/error.log",
-            "log_group_name": "${AsgSystemLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/nginx/error.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/mastodon-web-error.log",
-            "log_group_name": "${AsgSystemLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/mastodon-web-error.log",
             "timezone": "UTC"
           },
@@ -114,7 +114,7 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
           },
           {
             "file_path": "/var/log/mastodon-sidekiq-error.log",
-            "log_group_name": "${AsgSystemLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/mastodon-sidekiq-error.log",
             "timezone": "UTC"
           },
@@ -126,7 +126,7 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
           },
           {
             "file_path": "/var/log/mastodon-streaming-error.log",
-            "log_group_name": "${AsgSystemLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/mastodon-streaming-error.log",
             "timezone": "UTC"
           },
