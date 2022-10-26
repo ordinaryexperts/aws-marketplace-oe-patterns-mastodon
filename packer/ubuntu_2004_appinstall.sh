@@ -47,13 +47,37 @@ su - mastodon -c "cd /home/mastodon/live && OTP_SECRET=precompile_placeholder SE
 # set up services
 cp /home/mastodon/live/dist/mastodon-*.service /etc/systemd/system/
 # enable log files
-sed -i '/^\[Service\].*/a StandardOutput=file:/var/log/mastodon-web-output.log' /etc/systemd/system/mastodon-web.service
-sed -i '/^\[Service\].*/a StandardError=file:/var/log/mastodon-web-error.log' /etc/systemd/system/mastodon-web.service
-sed -i '/^\[Service\].*/a StandardOutput=file:/var/log/mastodon-sidekiq-output.log' /etc/systemd/system/mastodon-sidekiq.service
-sed -i '/^\[Service\].*/a StandardError=file:/var/log/mastodon-sidekiq-error.log' /etc/systemd/system/mastodon-sidekiq.service
-sed -i '/^\[Service\].*/a StandardOutput=file:/var/log/mastodon-streaming-output.log' /etc/systemd/system/mastodon-streaming.service
-sed -i '/^\[Service\].*/a StandardError=file:/var/log/mastodon-streaming-error.log' /etc/systemd/system/mastodon-streaming.service
-# TODO log rotation
+# https://stackoverflow.com/a/43830129
+sed -i '/^\[Service\].*/a SyslogIdentifier=mastodon-web' /etc/systemd/system/mastodon-web.service
+sed -i '/^\[Service\].*/a SyslogIdentifier=mastodon-sidekiq' /etc/systemd/system/mastodon-sidekiq.service
+sed -i '/^\[Service\].*/a SyslogIdentifier=mastodon-streaming' /etc/systemd/system/mastodon-streaming.service
+cat <<EOF > /etc/rsyslog.d/60-mastodon.conf
+:programname, isequal, "mastodon-web" /var/log/mastodon-web.log
+:programname, isequal, "mastodon-sidekiq" /var/log/mastodon-sidekiq.log
+:programname, isequal, "mastodon-streaming" /var/log/mastodon-streaming.log
+EOF
+
+# log rotation
+cat <<EOF > /etc/logrotate.d/mastodon
+/var/log/mastodon-web.log {
+  size 10M
+  copytruncate
+  su root root
+  rotate 4
+}
+/var/log/mastodon-sidekiq.log {
+  size 10M
+  copytruncate
+  su root root
+  rotate 4
+}
+/var/log/mastodon-streaming.log {
+  size 10M
+  copytruncate
+  su root root
+  rotate 4
+}
+EOF
 
 systemctl daemon-reload
 systemctl enable mastodon-web mastodon-sidekiq mastodon-streaming
@@ -64,6 +88,29 @@ cat <<EOF > /etc/cron.d/mastodon
 0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove
 EOF
 
+# install custom rake task for generating secrets at initial provisioning
+cat <<EOF > /home/mastodon/live/lib/tasks/oe.rake
+require 'json'
+
+namespace :oe do
+  desc 'Generate Secrets'
+  task :generate_secrets do
+    env = {}
+
+    %w(SECRET_KEY_BASE OTP_SECRET).each do |key|
+      env[key] = SecureRandom.hex(64)
+    end
+
+    vapid_key = Webpush.generate_key
+    env['VAPID_PRIVATE_KEY'] = vapid_key.private_key
+    env['VAPID_PUBLIC_KEY']  = vapid_key.public_key
+
+    puts env.to_json
+  end
+end
+EOF
+chown mastodon:mastodon /home/mastodon/live/lib/tasks/oe.rake
+chmod 664 /home/mastodon/live/lib/tasks/oe.rake
+
 # remove default site
 rm -f /etc/nginx/sites-enabled/default
-
