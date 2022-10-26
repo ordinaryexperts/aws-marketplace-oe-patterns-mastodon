@@ -112,5 +112,44 @@ EOF
 chown mastodon:mastodon /home/mastodon/live/lib/tasks/oe.rake
 chmod 664 /home/mastodon/live/lib/tasks/oe.rake
 
+pip install boto3
+cat <<EOF > /root/check-secrets.py
+#!/usr/bin/env python3
+
+import boto3
+import json
+import subprocess
+import sys
+
+region_name = sys.argv[1]
+secret_name = sys.argv[2]
+
+client = boto3.client("secretsmanager", region_name=region_name)
+response = client.list_secrets(
+  Filters=[{"Key": "name", "Values": [secret_name]}]
+)
+arn = response["SecretList"][0]["ARN"]
+response = client.get_secret_value(
+  SecretId=arn
+)
+current_secret = json.loads(response["SecretString"])
+if not 'secret_key_base' in current_secret:
+  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake oe:generate_secrets"'
+  output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8')
+  secrets = json.loads(output)
+  current_secret['secret_key_base']   = secrets['SECRET_KEY_BASE']
+  current_secret['otp_secret']        = secrets['OTP_SECRET']
+  current_secret['vapid_public_key']  = secrets['VAPID_PUBLIC_KEY']
+  current_secret['vapid_private_key'] = secrets['VAPID_PRIVATE_KEY']
+  client.update_secret(
+    SecretId=arn,
+    SecretString=json.dumps(current_secret)
+  )
+else:
+  print('Secrets already generated - no action needed.')
+EOF
+chown root:root /root/check-secrets.py
+chmod 744 /root/check-secrets.py
+
 # remove default site
 rm -f /etc/nginx/sites-enabled/default

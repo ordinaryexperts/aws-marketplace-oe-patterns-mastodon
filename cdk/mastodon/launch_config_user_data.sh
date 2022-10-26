@@ -150,15 +150,21 @@ aws ssm get-parameter \
 DB_PASSWORD=$(cat /opt/oe/patterns/secret.json | jq -r .password)
 DB_USERNAME=$(cat /opt/oe/patterns/secret.json | jq -r .username)
 
+/root/check-secrets.py ${AWS::Region} ${InstanceSecretName}
+
 aws ssm get-parameter \
     --name "/aws/reference/secretsmanager/${InstanceSecretName}" \
     --with-decryption \
     --query Parameter.Value \
 | jq -r . > /opt/oe/patterns/instance.json
 
-SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
 ACCESS_KEY_ID=$(cat /opt/oe/patterns/instance.json | jq -r .access_key_id)
+OTP_SECRET=$(cat /opt/oe/patterns/instance.json | jq -r .otp_secret)
 SECRET_ACCESS_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .secret_access_key)
+SECRET_KEY_BASE=$(cat /opt/oe/patterns/instance.json | jq -r .secret_key_base)
+SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
+VAPID_PRIVATE_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .vapid_private_key)
+VAPID_PUBLIC_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .vapid_public_key)
 
 cat <<EOF > /etc/nginx/sites-available/mastodon
 map \$http_upgrade \$connection_upgrade {
@@ -272,10 +278,10 @@ EOF
 cat <<EOF > /home/mastodon/live/.env.production
 LOCAL_DOMAIN=${Hostname}
 SINGLE_USER_MODE=false
-SECRET_KEY_BASE=TODO
-OTP_SECRET=TODO
-VAPID_PRIVATE_KEY=TODO
-VAPID_PUBLIC_KEY=TODO
+SECRET_KEY_BASE="$SECRET_KEY_BASE"
+OTP_SECRET="$OTP_SECRET"
+VAPID_PRIVATE_KEY="$VAPID_PRIVATE_KEY"
+VAPID_PUBLIC_KEY="$VAPID_PUBLIC_KEY"
 DB_HOST=${DbCluster.Endpoint.Address}
 DB_PORT=${DbCluster.Endpoint.Port}
 DB_NAME=mastodon_production
