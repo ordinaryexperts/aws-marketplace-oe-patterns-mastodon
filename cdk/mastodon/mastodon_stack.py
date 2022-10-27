@@ -56,21 +56,17 @@ class MastodonStack(Stack):
             default="Mastodon",
             description="The name of this Mastodon site."
         )
-        self.name_param.override_logical_id("Name")
         self.assets_bucket_name_param = CfnParameter(
             self,
             "AssetsBucketName",
             default="",
             description="The name of the S3 bucket to store uploaded assets. If not specified, a bucket will be created."
         )
-        self.assets_bucket_name_param.override_logical_id("AssetsBucketName")
-
         self.assets_bucket_name_not_exists_condition = CfnCondition(
             self,
             "AssetsBucketNameNotExists",
             expression=Fn.condition_equals(self.assets_bucket_name_param.value, "")
         )
-
         self.assets_bucket = aws_s3.CfnBucket(
             self,
             "AssetsBucket",
@@ -108,35 +104,34 @@ class MastodonStack(Stack):
         # dns
         dns = Dns(self, "Dns")
 
+        # add permissions for s3 bucket to SES instance user
+        s3_bucket_user_policy = aws_iam.CfnUser.PolicyProperty(
+            policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[
+                            "s3:*"
+                        ],
+                        resources=[ f"{self.assets_bucket_arn}/*" ]
+                    ),
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[
+                            "s3:ListBucket"
+                        ],
+                        resources=[ self.assets_bucket_arn ]
+                    )
+                ]
+            ),
+            policy_name="AllowAssetsBucket"
+        )
+
         ses = Ses(
             self,
             "Ses",
-            hosted_zone_name=dns.route_53_hosted_zone_name_param.value_as_string
-        )
-
-        # add permissions for s3 bucket to SES instance user
-        ses.instance_user.policies.append(
-            aws_iam.CfnUser.PolicyProperty(
-                policy_document=aws_iam.PolicyDocument(
-                    statements=[
-                        aws_iam.PolicyStatement(
-                            effect=aws_iam.Effect.ALLOW,
-                            actions=[
-                                "s3:*"
-                            ],
-                            resources=[ f"{self.assets_bucket_arn}/*" ]
-                        ),
-                        aws_iam.PolicyStatement(
-                            effect=aws_iam.Effect.ALLOW,
-                            actions=[
-                                "s3:ListBucket"
-                            ],
-                            resources=[ self.assets_bucket_arn ]
-                        )
-                    ]
-                ),
-                policy_name="AllowAssetsBucket"
-            )
+            hosted_zone_name=dns.route_53_hosted_zone_name_param.value_as_string,
+            additional_iam_user_policies=[s3_bucket_user_policy]
         )
 
         # db_secret
