@@ -3,6 +3,9 @@
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
+RUBY_VERSION=3.0.4
+MASTODON_VERSION=4.0.2
+
 apt-get update && apt-get upgrade -y
 
 # prereqs
@@ -30,12 +33,12 @@ su - mastodon -c "cd ~/.rbenv && src/configure && make -C src"
 su - mastodon -c "echo 'export PATH=\"/home/mastodon/.rbenv/bin:$PATH\"' >> ~/.bashrc"
 su - mastodon -c "echo 'eval \"\$(rbenv init - bash)\"' >> ~/.bashrc"
 su - mastodon -c "git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build"
-su - mastodon -c "HOME=/home/mastodon RUBY_CONFIGURE_OPTS=--with-jemalloc /home/mastodon/.rbenv/bin/rbenv install 3.0.3"
-su - mastodon -c "/home/mastodon/.rbenv/bin/rbenv global 3.0.3 && /home/mastodon/.rbenv/shims/gem install bundler --no-document"
+su - mastodon -c "HOME=/home/mastodon RUBY_CONFIGURE_OPTS=--with-jemalloc /home/mastodon/.rbenv/bin/rbenv install $RUBY_VERSION"
+su - mastodon -c "/home/mastodon/.rbenv/bin/rbenv global $RUBY_VERSION && /home/mastodon/.rbenv/shims/gem install bundler --no-document"
 su - mastodon -c "git clone https://github.com/mastodon/mastodon.git /home/mastodon/live"
 
 # git tag -l | grep -v 'rc[0-9]*$' | sort -V | tail -n 1
-su - mastodon -c "cd /home/mastodon/live && git checkout v3.5.3"
+su - mastodon -c "cd /home/mastodon/live && git checkout v$MASTODON_VERSION"
 su - mastodon -c "cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle config deployment 'true'"
 su - mastodon -c "cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle config without 'development test'"
 su - mastodon -c "cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle install -j$(getconf _NPROCESSORS_ONLN)"
