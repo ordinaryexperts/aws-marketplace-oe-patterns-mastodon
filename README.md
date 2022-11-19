@@ -17,4 +17,4 @@ The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation templa
 
 ## Architecture Diagram
 
-[AWS Mastodon Architecture Diagram](docs/mastodon-aws-diagram.png)
+![AWS Mastodon Architecture Diagram](docs/mastodon-aws-diagram.png)
