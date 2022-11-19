@@ -11,7 +11,7 @@ The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation templa
 * OpenSearch Service - for site search
 * S3 - to store user-generated binary files (images, etc)
 * SES - for sending email
-* Route53 - for setting up friend domain names
+* Route53 - for setting up friendly domain names
 * ACM - for SSL
 * and others...(IAM, Secrets Manager, SSM)
 
