@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation template with a custom AMI which provisions a production-ready Mastodon system. It uses the following AWS services:
+The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation template with a custom AMI which provisions a production-ready [Mastodon](https://joinmastodon.org/) system. It uses the following AWS services:
 
 * VPC (operator can pass in VPC info or product can create a VPC)
 * EC2 - it provisions an Auto Scaling Group for the web application tier
@@ -14,3 +14,7 @@ The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation templa
 * Route53 - for setting up friend domain names
 * ACM - for SSL
 * and others...(IAM, Secrets Manager, SSM)
+
+## Architecture Diagram
+
+[AWS Mastodon Architecture Diagram](docs/mastodon-aws-diagram.png)
