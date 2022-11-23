@@ -27,7 +27,7 @@ We support multiple availability zones using an RDS Aurora Postgresql cluster an
 "Resource3_Name": "Mastodon Homepage"
 "Resource3_URL": "https://joinmastodon.org/"
 "Image URL": "https://ordinaryexperts.com/img/products/mastodon-pattern/mastodon-product-logo.png"
-"Product Video": "TODO"
+"Product Video": "https://youtu.be/H6om9QLC5r4"
 "Support Offered": "TRUE"
 "Support Information": "https://ordinaryexperts.com/products/mastodon-pattern/"
 "Support Detail": "Email support offered with subscription."
