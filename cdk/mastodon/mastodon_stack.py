@@ -148,6 +148,7 @@ class MastodonStack(Stack):
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],
             user_data_contents=launch_config_user_data,
             user_data_variables={
+                "AssetsBucketName": bucket.bucket_name(),
                 "DbSecretArn": db_secret.secret_arn(),
                 "Hostname": dns.hostname(),
                 "HostedZoneName": dns.route_53_hosted_zone_name_param.value_as_string,
