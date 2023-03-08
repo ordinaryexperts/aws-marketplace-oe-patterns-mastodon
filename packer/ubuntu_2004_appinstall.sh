@@ -4,7 +4,7 @@
 #
 
 RUBY_VERSION=3.0.4
-MASTODON_VERSION=4.0.2
+MASTODON_VERSION=4.1.0
 
 apt-get update && apt-get upgrade -y
 
