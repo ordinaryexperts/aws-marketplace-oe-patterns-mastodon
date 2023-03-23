@@ -144,8 +144,9 @@ class MastodonStack(Stack):
             self,
             "Asg",
             additional_iam_role_policies=[asg_update_secret_policy],
-            default_instance_type="t3.xlarge",
+            default_instance_type="t3.small",
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],
+            use_graviton = False,
             user_data_contents=launch_config_user_data,
             user_data_variables={
                 "AssetsBucketName": bucket.bucket_name(),
