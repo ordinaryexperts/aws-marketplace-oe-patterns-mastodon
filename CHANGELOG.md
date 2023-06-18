@@ -1,5 +1,7 @@
 # Unreleased
 
+# 1.2.0
+
 * Upgrade to Mastodon 4.1.2
 * Move to shared packer templates
 * Add FirstUseInstructions Output

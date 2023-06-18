@@ -1,4 +1,4 @@
-SCRIPT_VERSION=feature/ubuntu-2004
+SCRIPT_VERSION=1.3.0
 SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
 SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
 
