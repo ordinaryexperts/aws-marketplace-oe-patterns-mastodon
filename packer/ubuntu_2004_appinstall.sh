@@ -1,10 +1,20 @@
+SCRIPT_VERSION=feature/ubuntu-2004
+SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
+SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
+
+# preinstall steps
+curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
+chmod +x $SCRIPT_PREINSTALL
+./$SCRIPT_PREINSTALL --install-code-deploy-agent --install-efs-utils
+rm $SCRIPT_PREINSTALL
+
 #
 # Mastodon configuration
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
-RUBY_VERSION=3.0.4
-MASTODON_VERSION=4.1.0
+RUBY_VERSION=3.0.6
+MASTODON_VERSION=4.1.2
 
 apt-get update && apt-get upgrade -y
 
@@ -156,3 +166,9 @@ chmod 744 /root/check-secrets.py
 
 # remove default site
 rm -f /etc/nginx/sites-enabled/default
+
+# post install steps
+curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_POSTINSTALL"
+chmod +x "$SCRIPT_POSTINSTALL"
+./"$SCRIPT_POSTINSTALL"
+rm $SCRIPT_POSTINSTALL
