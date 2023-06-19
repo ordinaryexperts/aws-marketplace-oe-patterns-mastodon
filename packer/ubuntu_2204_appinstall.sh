@@ -5,7 +5,7 @@ SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
 # preinstall steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
 chmod +x $SCRIPT_PREINSTALL
-./$SCRIPT_PREINSTALL --install-code-deploy-agent --install-efs-utils
+./$SCRIPT_PREINSTALL
 rm $SCRIPT_PREINSTALL
 
 #
@@ -166,6 +166,10 @@ chmod 744 /root/check-secrets.py
 
 # remove default site
 rm -f /etc/nginx/sites-enabled/default
+
+# setup nginx config
+cp /home/mastodon/live/dist/nginx.conf /etc/nginx/sites-available/mastodon
+usermod -a -G mastodon www-data
 
 # post install steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_POSTINSTALL"

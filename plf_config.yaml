@@ -1,6 +1,6 @@
 ---
-"Product ID": ""
-"Product Code": ""
+"Product ID": "d0a98067-9a26-440a-858e-00193a953934"
+"Product Code": "ccpvo40ljyrvfj618djqv3p6c"
 "Accessibility": "Public"
 "SKU": "OE_PATTERNS_MASTODON"
 "Software by": "Ordinary Experts"
@@ -38,7 +38,7 @@ We support multiple availability zones using an RDS Aurora Postgresql cluster an
 "Architecture": "x86_64"
 "AFI": ""
 "Operating System": "Ubuntu"
-"Operating System Version": "20.04"
+"Operating System Version": "22.04"
 "Operating System Username": "ubuntu"
 "PIOPS Total": ""
 "AWS Services Required": "Amazon EC2, Amazon RDS, Amazon S3, Amazon CloudWatch, Amazon OpenSearch Service, Amazon ElastiCache, Amazon VPC, Amazon SecretsManager, Amazon IAM, Amazon SNS, Amazon CertificateManager, Amazon CloudFormation"

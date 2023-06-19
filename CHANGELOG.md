@@ -5,6 +5,7 @@
 * Upgrade to Mastodon 4.1.2
 * Move to shared packer templates
 * Add FirstUseInstructions Output
+* Upgrade to Ubuntu 22.04
 
 # 1.1.0
 
