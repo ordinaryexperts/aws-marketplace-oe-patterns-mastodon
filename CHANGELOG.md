@@ -6,6 +6,7 @@
 * Move to shared packer templates
 * Add FirstUseInstructions Output
 * Upgrade to Ubuntu 22.04
+* Assets bucket permission updates
 
 # 1.1.0
 
