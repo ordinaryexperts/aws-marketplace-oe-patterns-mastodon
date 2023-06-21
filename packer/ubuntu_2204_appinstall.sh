@@ -34,8 +34,9 @@ apt-get install -y \
   libidn11-dev libicu-dev libjemalloc-dev
 
 # yarn
-corepack enable
-yarn set version stable
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+apt-get update && apt-get install -y yarn
 
 useradd -m -s /bin/bash mastodon
 su - mastodon -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
