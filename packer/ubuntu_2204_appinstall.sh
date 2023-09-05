@@ -1,11 +1,11 @@
-SCRIPT_VERSION=feature/ubuntu-2004
+SCRIPT_VERSION=1.3.0
 SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
 SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
 
 # preinstall steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
 chmod +x $SCRIPT_PREINSTALL
-./$SCRIPT_PREINSTALL --install-code-deploy-agent --install-efs-utils
+./$SCRIPT_PREINSTALL
 rm $SCRIPT_PREINSTALL
 
 #
@@ -34,8 +34,9 @@ apt-get install -y \
   libidn11-dev libicu-dev libjemalloc-dev
 
 # yarn
-corepack enable
-yarn set version stable
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+apt-get update && apt-get install -y yarn
 
 useradd -m -s /bin/bash mastodon
 su - mastodon -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
@@ -166,6 +167,10 @@ chmod 744 /root/check-secrets.py
 
 # remove default site
 rm -f /etc/nginx/sites-enabled/default
+
+# setup nginx config
+cp /home/mastodon/live/dist/nginx.conf /etc/nginx/sites-available/mastodon
+usermod -a -G mastodon www-data
 
 # post install steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_POSTINSTALL"
