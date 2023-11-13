@@ -156,7 +156,7 @@ We support multiple availability zones using an RDS Aurora Postgresql cluster an
 "FCP Dimension24 Description": ""
 "FCP Dimension24 Rate": ""
 "Clusters and AWS Resources Topology 1: Title": "Ordinary Experts Mastodon Pattern"
-"Clusters and AWS Resources Topology 1: AWS Calculator Link": "https://calculator.aws/#/estimate?id=28e0721d09cea568f7e0551967dc6da246dbcf5d"
+"Clusters and AWS Resources Topology 1: AWS Calculator Link": "https://calculator.aws/#/estimate?id=f6ff0b26e3df80708a7f8caac3334b116e28d6a6"
 "Clusters and AWS Resources Topology 1: Short Description": "Ordinary Experts Mastodon Pattern AWS Architecture Diagram"
 "Clusters and AWS Resources Topology 1: Long Description": "The Ordinary Experts Mastodon Patterns AWS Architecture Diagram shows the total flow of services from when the customer accesses the Mastodon application. The diagram shows the following AWS Services: Amazon Simple Storage System (Amazon S3), Amazon Elastic Compute Cloud (Amazon EC2), Amazon Virtual Public Cloud (Amazon VPC), Amazon Aurora Postgresql, Amazon Secrets Manager, Amazon OpenSearch Service, and Amazon ElastiCache."
 "Clusters and AWS Resources Topology 1: CloudFormation Template URL": "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/mastodon/{{version}}/template.yaml"
