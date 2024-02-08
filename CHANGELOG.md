@@ -1,6 +1,10 @@
 # Unreleased
 
 * Updated AWS Calculator link to use smaller default instance types
+* Upgrade to Mastodon 4.2.5
+* Upgrade to Ruby 3.2.3
+* Add weekly cron jobs as described here: https://docs.joinmastodon.org/admin/setup/#cleanup
+* python linting cleanup
 
 # 1.2.0
 
