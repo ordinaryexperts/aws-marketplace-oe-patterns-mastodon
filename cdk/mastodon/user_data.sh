@@ -206,6 +206,12 @@ sed -i 's/example.com/${Hostname}/g' /etc/nginx/sites-available/mastodon
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon
 service nginx restart
 
+crontab -l -u mastodon > /tmp/cron
+echo "@weekly RAILS_ENV=production /home/mastodon/live/bin/tootctl media remove" >> /tmp/cron
+echo "@weekly RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove" >> /tmp/cron
+crontab -u mastodon /tmp/cron
+rm /tmp/cron
+
 # this is safe to re-run as it will check if the db has already been setup...
 su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup"
 
