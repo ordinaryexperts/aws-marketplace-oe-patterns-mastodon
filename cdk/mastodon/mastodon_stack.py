@@ -31,8 +31,8 @@ else:
     except:
         template_version = "CICD"
 
-AMI_ID="ami-06143b33421e13cba"
-AMI_NAME="ordinary-experts-patterns-mastodon--20240528-0719"
+AMI_ID="ami-09c9d9a39f55c1da1"
+AMI_NAME="ordinary-experts-patterns-mastodon-1.3.0-2-g0b8f27e-20240528-1156"
 generated_ami_ids = {
     "af-south-1": "ami-XXXXXXXXXXXXXXXXX",
     "ap-east-1": "ami-XXXXXXXXXXXXXXXXX",
@@ -58,7 +58,7 @@ generated_ami_ids = {
     "us-east-2": "ami-XXXXXXXXXXXXXXXXX",
     "us-west-1": "ami-XXXXXXXXXXXXXXXXX",
     "us-west-2": "ami-XXXXXXXXXXXXXXXXX",
-    "us-east-1": "ami-06143b33421e13cba"
+    "us-east-1": "ami-09c9d9a39f55c1da1"
 }
 # End generated code block.
 
@@ -195,9 +195,9 @@ class MastodonStack(Stack):
             "FirstUseInstructions",
             description="Instructions for getting started",
             value="""
-Click on the DnsSiteUrlOutput link and register a new user. Then make that user an admin by connecting to the EC2 instance with SSM Sessions Manager and running this command:
+Create an admin user by connecting to the EC2 instance with SSM Sessions Manager and running this command:
 
-sudo su - mastodon -c 'read -p \"Enter username: \" username && cd ~/live && PATH=~/.rbenv/shims:$PATH RAILS_ENV=production bin/tootctl accounts modify \"$username\" --role Owner'
+sudo su - mastodon -c 'read -p \"Enter username: \" username && read -p \"Enter email: \" email && cd ~/live && PATH=~/.rbenv/shims:$PATH RAILS_ENV=production bin/tootctl accounts create \"$username\" --email \"$email\" --confirmed --approve --role Owner'
 """
         )
 
