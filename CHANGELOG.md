@@ -1,9 +1,11 @@
 # Unreleased
 
+# 2.0.0
+
 * Upgrade Mastodon to 4.2.8
 * Upgrade Node.js to 20
 * Upgrade OE Common Constructs to 3.20.0
-  * Upgrade Postgresql Aurora Clusters to 15.4
+  * Upgrade Postgresql Aurora Clusters to 15.4 *causes downtime during upgrade*
 * Upgrade OE devenv to 2.5.1
   * Upgrade CDK to 2.120.0
   * Update pricing
