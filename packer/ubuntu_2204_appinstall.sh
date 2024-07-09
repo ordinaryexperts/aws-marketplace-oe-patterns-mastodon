@@ -14,7 +14,7 @@ rm $SCRIPT_PREINSTALL
 #
 
 RUBY_VERSION=3.2.3
-MASTODON_VERSION=4.2.5
+MASTODON_VERSION=4.2.9
 
 apt-get update && apt-get upgrade -y
 
@@ -22,7 +22,7 @@ apt-get update && apt-get upgrade -y
 apt-get install -y curl wget gnupg apt-transport-https lsb-release ca-certificates
 
 # Node.js
-curl -sL https://deb.nodesource.com/setup_16.x | bash -
+curl -sL https://deb.nodesource.com/setup_20.x | bash -
 
 # System packages
 apt-get install -y \
