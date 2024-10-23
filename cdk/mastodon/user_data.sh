@@ -165,6 +165,9 @@ SECRET_KEY_BASE=$(cat /opt/oe/patterns/instance.json | jq -r .secret_key_base)
 SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
 VAPID_PRIVATE_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .vapid_private_key)
 VAPID_PUBLIC_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .vapid_public_key)
+ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .active_record_encryption_deterministic_key)
+ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=$(cat /opt/oe/patterns/instance.json | jq -r .active_record_encryption_key_derivation_salt)
+ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .active_record_encryption_primary_key)
 
 cat <<EOF > /home/mastodon/live/.env.production
 LOCAL_DOMAIN=${Hostname}
@@ -198,6 +201,9 @@ SMTP_PASSWORD="$SMTP_PASSWORD"
 SMTP_AUTH_METHOD=login
 SMTP_OPENSSL_VERIFY_MODE=none
 SMTP_FROM_ADDRESS='${Name} <no-reply@${HostedZoneName}>'
+ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=$ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=$ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=$ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
 EOF
 
 sed -i 's|# ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;|ssl_certificate     /etc/ssl/certs/nginx-selfsigned.crt;|' /etc/nginx/sites-available/mastodon

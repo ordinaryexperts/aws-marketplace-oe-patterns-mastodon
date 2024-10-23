@@ -1,5 +1,11 @@
 # Unreleased
 
+* Upgrade Mastodon to 4.3.1
+* Upgrade Ruby to 3.3.5
+* Upgrade Ubuntu to 24.04
+* Upgrade OE Common Constructs to 4.1.0
+* Update REDIS maxmemory-policy to 'noeviction'
+
 # 2.0.0
 
 * Upgrade Mastodon to 4.2.8

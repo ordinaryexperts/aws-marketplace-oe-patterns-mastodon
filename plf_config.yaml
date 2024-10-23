@@ -39,7 +39,7 @@ We support multiple availability zones using an RDS Aurora Postgresql cluster an
 "Architecture": "x86_64"
 "AFI": ""
 "Operating System": "UBUNTU"
-"Operating System Version": "22.04"
+"Operating System Version": "24.04"
 "Operating System Username": "ubuntu"
 "PIOPS Total": ""
 "AWS Services Required": "Amazon EC2, Amazon RDS, Amazon S3, Amazon CloudWatch, Amazon OpenSearch Service, Amazon ElastiCache, Amazon VPC, Amazon Secrets Manager, Amazon IAM, Amazon SNS, Amazon Certificate Manager, Amazon CloudFormation"
