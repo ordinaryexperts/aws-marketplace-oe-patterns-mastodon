@@ -14,7 +14,7 @@ Automatically configured to support auto-scaling through AWS Autoscaling Groups,
 The template ensure multi-level security by incorporating AWS IAM for federated access to resources with least privilege and AWS managed keys and Secret Manager to manage secrets for encryption of data at rest and in transit.
 
 We support multiple availability zones using an RDS Aurora Postgresql cluster and EC2 Auto Scaling Groups."
-"Highlight1": "Production-ready Mastodon v4.2.9 site, with search, email, and caching"
+"Highlight1": "Production-ready Mastodon v4.3.1 site, with search, email, and caching"
 "Highlight2": "Integrated with AWS Certificate Manager for HTTPS support"
 "Highlight3": "Logs in CloudWatch Logs, Remote access via Session Manager"
 "Product Category1": "Application Stacks"

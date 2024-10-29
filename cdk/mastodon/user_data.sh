@@ -117,6 +117,12 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
             "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/mastodon-streaming.log",
             "timezone": "UTC"
+          },
+          {
+            "file_path": "/home/mastodon/live/log/crons.log",
+            "log_group_name": "${AsgAppLogGroup}",
+            "log_stream_name": "{instance_id}-/home/mastodon/live/log/crons.log",
+            "timezone": "UTC"
           }
         ]
       }
@@ -212,15 +218,12 @@ sed -i 's/example.com/${Hostname}/g' /etc/nginx/sites-available/mastodon
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon
 service nginx restart
 
-crontab -l -u mastodon > /tmp/cron
-echo "@weekly RAILS_ENV=production /home/mastodon/live/bin/tootctl media remove" >> /tmp/cron
-echo "@weekly RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove" >> /tmp/cron
-crontab -u mastodon /tmp/cron
-rm /tmp/cron
-
 # this is safe to re-run as it will check if the db has already been setup...
 su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup"
 
 systemctl restart mastodon-web mastodon-sidekiq mastodon-streaming
 success=$?
 cfn-signal --exit-code $success --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
+
+# rebuild indexes...this also happens every hour via cron
+su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl search deploy --only=instances accounts tags statuses public_statuses"
