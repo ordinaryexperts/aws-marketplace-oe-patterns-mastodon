@@ -1,4 +1,4 @@
-SCRIPT_VERSION=feature/ubuntu2404
+SCRIPT_VERSION=1.6.0
 SCRIPT_PREINSTALL=ubuntu_2204_2404_preinstall.sh
 SCRIPT_POSTINSTALL=ubuntu_2204_2404_postinstall.sh
 
@@ -69,8 +69,22 @@ cat <<EOF > /etc/rsyslog.d/60-mastodon.conf
 :programname, isequal, "mastodon-streaming" /var/log/mastodon-streaming.log
 EOF
 
+# set up crons
+crontab -l -u mastodon > /tmp/cron
+echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl media remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
+echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl preview_cards remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
+echo "@hourly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl search deploy --only=instances accounts tags statuses public_statuses >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
+crontab -u mastodon /tmp/cron
+rm /tmp/cron
+
 # log rotation
 cat <<EOF > /etc/logrotate.d/mastodon
+/home/mastodon/live/log/crons.log {
+  size 10M
+  copytruncate
+  su mastodon mastodon
+  rotate 4
+}
 /var/log/mastodon-web.log {
   size 10M
   copytruncate
@@ -93,12 +107,6 @@ EOF
 
 systemctl daemon-reload
 systemctl enable mastodon-web mastodon-sidekiq mastodon-streaming
-
-# set up crons
-cat <<EOF > /etc/cron.d/mastodon
-0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl media remove
-0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove
-EOF
 
 # install custom rake task for generating secrets at initial provisioning
 cat <<EOF > /home/mastodon/live/lib/tasks/oe.rake
@@ -156,7 +164,7 @@ current_secret = json.loads(response["SecretString"])
 secrets_already_generated = True
 if not 'secret_key_base' in current_secret:
   secrets_already_generated = False
-  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake oe:generate_secrets"'
+  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH bundle exec rake oe:generate_secrets"'
   output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8')
   secrets = json.loads(output)
   current_secret['secret_key_base']   = secrets['SECRET_KEY_BASE']
@@ -170,7 +178,7 @@ if not 'secret_key_base' in current_secret:
 # added in Mastodon 4.3.0
 if not 'active_record_encryption_deterministic_key' in current_secret:
   secrets_already_generated = False
-  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake oe:generate_secrets"'
+  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH bundle exec rake oe:generate_secrets"'
   output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8')
   secrets = json.loads(output)
   current_secret['active_record_encryption_deterministic_key']   = secrets['ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY']
