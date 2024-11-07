@@ -1,6 +1,6 @@
-SCRIPT_VERSION=1.3.0
-SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
-SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
+SCRIPT_VERSION=1.6.0
+SCRIPT_PREINSTALL=ubuntu_2204_2404_preinstall.sh
+SCRIPT_POSTINSTALL=ubuntu_2204_2404_postinstall.sh
 
 # preinstall steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
@@ -13,8 +13,8 @@ rm $SCRIPT_PREINSTALL
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
-RUBY_VERSION=3.2.3
-MASTODON_VERSION=4.2.9
+RUBY_VERSION=3.3.5
+MASTODON_VERSION=4.3.1
 
 apt-get update && apt-get upgrade -y
 
@@ -25,20 +25,18 @@ apt-get install -y curl wget gnupg apt-transport-https lsb-release ca-certificat
 curl -sL https://deb.nodesource.com/setup_20.x | bash -
 
 # System packages
-apt-get install -y \
-  imagemagick ffmpeg libpq-dev libxml2-dev libxslt1-dev file git-core \
-  g++ libprotobuf-dev protobuf-compiler pkg-config nodejs gcc autoconf \
+apt install -y \
+  imagemagick ffmpeg libvips-tools libpq-dev libxml2-dev libxslt1-dev file git-core \
+  g++ libprotobuf-dev protobuf-compiler pkg-config gcc autoconf \
   bison build-essential libssl-dev libyaml-dev libreadline6-dev \
   zlib1g-dev libncurses5-dev libffi-dev libgdbm-dev \
-  nginx redis-tools postgresql-client \
+  nginx nodejs redis-tools postgresql-client \
   libidn11-dev libicu-dev libjemalloc-dev
 
 # yarn
-curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-apt-get update && apt-get install -y yarn
+corepack enable
 
-useradd -m -s /bin/bash mastodon
+adduser --disabled-password mastodon
 su - mastodon -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
 su - mastodon -c "cd ~/.rbenv && src/configure && make -C src"
 su - mastodon -c "echo 'export PATH=\"/home/mastodon/.rbenv/bin:$PATH\"' >> ~/.bashrc"
@@ -53,10 +51,10 @@ su - mastodon -c "cd /home/mastodon/live && git checkout v$MASTODON_VERSION"
 su - mastodon -c "cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle config deployment 'true'"
 su - mastodon -c "cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle config without 'development test'"
 su - mastodon -c "cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle install -j$(getconf _NPROCESSORS_ONLN)"
-su - mastodon -c "cd /home/mastodon/live && yarn install --pure-lockfile"
+su - mastodon -c "cd /home/mastodon/live && yarn install"
 
 # precompile assets
-su - mastodon -c "cd /home/mastodon/live && OTP_SECRET=precompile_placeholder SECRET_KEY_BASE=precompile_placeholder RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake assets:precompile && yarn cache clean"
+su - mastodon -c "cd /home/mastodon/live && SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake assets:precompile && yarn cache clean"
 
 # set up services
 cp /home/mastodon/live/dist/mastodon-*.service /etc/systemd/system/
@@ -71,8 +69,22 @@ cat <<EOF > /etc/rsyslog.d/60-mastodon.conf
 :programname, isequal, "mastodon-streaming" /var/log/mastodon-streaming.log
 EOF
 
+# set up crons
+crontab -l -u mastodon > /tmp/cron
+echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl media remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
+echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl preview_cards remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
+echo "@hourly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl search deploy --only=instances accounts tags statuses public_statuses >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
+crontab -u mastodon /tmp/cron
+rm /tmp/cron
+
 # log rotation
 cat <<EOF > /etc/logrotate.d/mastodon
+/home/mastodon/live/log/crons.log {
+  size 10M
+  copytruncate
+  su mastodon mastodon
+  rotate 4
+}
 /var/log/mastodon-web.log {
   size 10M
   copytruncate
@@ -96,12 +108,6 @@ EOF
 systemctl daemon-reload
 systemctl enable mastodon-web mastodon-sidekiq mastodon-streaming
 
-# set up crons
-cat <<EOF > /etc/cron.d/mastodon
-0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl media remove
-0 0 * * 0 mastodon RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove
-EOF
-
 # install custom rake task for generating secrets at initial provisioning
 cat <<EOF > /home/mastodon/live/lib/tasks/oe.rake
 require 'json'
@@ -119,6 +125,14 @@ namespace :oe do
     env['VAPID_PRIVATE_KEY'] = vapid_key.private_key
     env['VAPID_PUBLIC_KEY']  = vapid_key.public_key
 
+    %w(
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+    ).each do |key|
+      env[key] = SecureRandom.alphanumeric(32)
+    end
+
     puts env.to_json
   end
 end
@@ -126,7 +140,7 @@ EOF
 chown mastodon:mastodon /home/mastodon/live/lib/tasks/oe.rake
 chmod 664 /home/mastodon/live/lib/tasks/oe.rake
 
-pip install boto3
+pip install boto3 --break-system-packages
 cat <<EOF > /root/check-secrets.py
 #!/usr/bin/env python3
 
@@ -147,8 +161,10 @@ response = client.get_secret_value(
   SecretId=arn
 )
 current_secret = json.loads(response["SecretString"])
+secrets_already_generated = True
 if not 'secret_key_base' in current_secret:
-  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake oe:generate_secrets"'
+  secrets_already_generated = False
+  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH bundle exec rake oe:generate_secrets"'
   output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8')
   secrets = json.loads(output)
   current_secret['secret_key_base']   = secrets['SECRET_KEY_BASE']
@@ -159,7 +175,20 @@ if not 'secret_key_base' in current_secret:
     SecretId=arn,
     SecretString=json.dumps(current_secret)
   )
-else:
+# added in Mastodon 4.3.0
+if not 'active_record_encryption_deterministic_key' in current_secret:
+  secrets_already_generated = False
+  cmd = 'su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH bundle exec rake oe:generate_secrets"'
+  output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8')
+  secrets = json.loads(output)
+  current_secret['active_record_encryption_deterministic_key']   = secrets['ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY']
+  current_secret['active_record_encryption_key_derivation_salt'] = secrets['ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT']
+  current_secret['active_record_encryption_primary_key']         = secrets['ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY']
+  client.update_secret(
+    SecretId=arn,
+    SecretString=json.dumps(current_secret)
+  )
+if secrets_already_generated:
   print('Secrets already generated - no action needed.')
 EOF
 chown root:root /root/check-secrets.py

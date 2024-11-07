@@ -16,6 +16,9 @@ test/taskcat_outputs
 test/main-test/template.yaml
 test/main-test/taskcat_outputs
 
+# plf
+plf*.xlsx
+
 # distributed files
 dist/*
 

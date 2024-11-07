@@ -117,6 +117,12 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
             "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/mastodon-streaming.log",
             "timezone": "UTC"
+          },
+          {
+            "file_path": "/home/mastodon/live/log/crons.log",
+            "log_group_name": "${AsgAppLogGroup}",
+            "log_stream_name": "{instance_id}-/home/mastodon/live/log/crons.log",
+            "timezone": "UTC"
           }
         ]
       }
@@ -165,6 +171,9 @@ SECRET_KEY_BASE=$(cat /opt/oe/patterns/instance.json | jq -r .secret_key_base)
 SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
 VAPID_PRIVATE_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .vapid_private_key)
 VAPID_PUBLIC_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .vapid_public_key)
+ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .active_record_encryption_deterministic_key)
+ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=$(cat /opt/oe/patterns/instance.json | jq -r .active_record_encryption_key_derivation_salt)
+ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .active_record_encryption_primary_key)
 
 cat <<EOF > /home/mastodon/live/.env.production
 LOCAL_DOMAIN=${Hostname}
@@ -198,6 +207,9 @@ SMTP_PASSWORD="$SMTP_PASSWORD"
 SMTP_AUTH_METHOD=login
 SMTP_OPENSSL_VERIFY_MODE=none
 SMTP_FROM_ADDRESS='${Name} <no-reply@${HostedZoneName}>'
+ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=$ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=$ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=$ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
 EOF
 
 sed -i 's|# ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;|ssl_certificate     /etc/ssl/certs/nginx-selfsigned.crt;|' /etc/nginx/sites-available/mastodon
@@ -206,15 +218,12 @@ sed -i 's/example.com/${Hostname}/g' /etc/nginx/sites-available/mastodon
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon
 service nginx restart
 
-crontab -l -u mastodon > /tmp/cron
-echo "@weekly RAILS_ENV=production /home/mastodon/live/bin/tootctl media remove" >> /tmp/cron
-echo "@weekly RAILS_ENV=production /home/mastodon/live/bin/tootctl preview_cards remove" >> /tmp/cron
-crontab -u mastodon /tmp/cron
-rm /tmp/cron
-
 # this is safe to re-run as it will check if the db has already been setup...
 su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup"
 
 systemctl restart mastodon-web mastodon-sidekiq mastodon-streaming
 success=$?
 cfn-signal --exit-code $success --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
+
+# rebuild indexes...this also happens every hour via cron
+su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl search deploy --only=instances accounts tags statuses public_statuses"
