@@ -1,5 +1,8 @@
 # Unreleased
 
+* Adding TaskCat tests
+* Upgrade OE Common Constructs to 4.1.4
+
 # 2.1.0
 
 * Upgrade Mastodon to 4.3.1
