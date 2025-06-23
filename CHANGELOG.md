@@ -1,7 +1,9 @@
 # Unreleased
 
+# 2.2.0
+
 * Adding TaskCat tests
-* Upgrade OE Common Constructs to 4.1.4
+* Upgrade OE Common Constructs to 4.2.4
 
 # 2.1.0
 
