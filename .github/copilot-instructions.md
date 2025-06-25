@@ -59,9 +59,10 @@ make synth
 
 1. **Use Docker Compose**: All development tasks should use the containerized environment via `make` commands
 2. **Follow CDK Patterns**: Use the established CDK patterns from `oe-patterns-cdk-common` library
-3. **Test Infrastructure**: Always run `make test-all` before submitting changes
+3. **Test Infrastructure**: Always run `make test-main` for validation before submitting changes
 4. **Shell Scripting**: Follow existing patterns in packer and user_data scripts
 5. **Python Code**: Follow CDK Python conventions, use type hints where appropriate
+6. **File Format**: All files must end with a newline character
 
 ## Code Context Tips
 
