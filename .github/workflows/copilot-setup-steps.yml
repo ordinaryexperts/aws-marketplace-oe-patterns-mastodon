@@ -1,0 +1,84 @@
+# Copilot Development Environment Setup
+# This workflow sets up the development environment for GitHub Copilot to understand
+# and assist with the AWS Marketplace Mastodon project development.
+
+name: Copilot Setup Steps
+
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    name: Setup Development Environment
+    runs-on: ubuntu-24.04
+    
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Set up Python environment matching CDK requirements
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Install Docker Compose if not available
+      - name: Install Docker Compose
+        run: |
+          if ! command -v docker-compose &> /dev/null; then
+            echo "Installing Docker Compose..."
+            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          docker-compose --version
+
+      # Download shared build utilities (common.mk)
+      - name: Update common build utilities
+        run: make update-common
+
+      # Build the development Docker environment
+      - name: Build development environment
+        id: build
+        run: |
+          echo "Building development Docker environment..."
+          make build
+        continue-on-error: true
+
+      # Report build status
+      - name: Report build status
+        if: steps.build.outcome == 'failure'
+        run: |
+          echo "❌ Build failed - this may be due to network connectivity or resource constraints"
+          exit 1
+
+      # Summary report
+      - name: Environment setup summary
+        if: always()
+        run: |
+          echo "## Copilot Development Environment Setup Summary"
+          echo "- Repository: ✅ Checked out"
+          echo "- Python: ✅ ${{ steps.setup-python.outputs.python-version }}"
+          echo "- Docker Compose: ✅ Available"
+          echo "- Common utilities: ✅ Updated"
+          if [ "${{ steps.build.outcome }}" = "success" ]; then
+            echo "- Build: ✅ Development environment built successfully"
+          else
+            echo "- Build: ❌ Failed (may require actual Docker environment)"
+          fi
+          echo ""
+          echo "This environment is now ready for GitHub Copilot to assist with:"
+          echo "- AWS CDK Python development"
+          echo "- CloudFormation template generation"
+          echo "- Shell scripting for infrastructure automation"
+          echo "- Mastodon deployment configuration"

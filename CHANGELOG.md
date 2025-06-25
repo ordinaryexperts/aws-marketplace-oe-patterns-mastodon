@@ -1,5 +1,6 @@
 # Unreleased
 
+* Add GitHub Copilot configuration files for enhanced development experience
 * Adding TaskCat tests
 * Upgrade OE Common Constructs to 4.1.4
 
