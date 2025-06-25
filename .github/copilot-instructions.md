@@ -63,6 +63,7 @@ make synth
 4. **Shell Scripting**: Follow existing patterns in packer and user_data scripts
 5. **Python Code**: Follow CDK Python conventions, use type hints where appropriate
 6. **File Format**: All files must end with a newline character
+7. **Update CHANGELOG.md**: Always update CHANGELOG.md with a description of new features under the 'Unreleased' section, following the existing format
 
 ## Code Context Tips
 
