@@ -4,11 +4,16 @@
 
 name: Copilot Setup Steps
 
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
 on:
+  workflow_dispatch:
   push:
-    branches: [ main, develop ]
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
   pull_request:
-    branches: [ main, develop ]
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
 
 jobs:
   copilot-setup-steps:
@@ -23,14 +28,12 @@ jobs:
           persist-credentials: false
 
       # Set up Python environment matching CDK requirements
-      # CDK setup.py specifies Python >=3.6, using 3.11 for modern features
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      # Install Docker Compose if not available (usually pre-installed on ubuntu-22.04)
+      # Install Docker Compose if not available
       - name: Install Docker Compose
         run: |
           if ! command -v docker-compose &> /dev/null; then
@@ -45,7 +48,6 @@ jobs:
         run: make update-common
 
       # Build the development Docker environment
-      # This step may fail in constrained environments due to network/resource limits
       - name: Build development environment
         id: build
         run: |
@@ -58,7 +60,6 @@ jobs:
         if: steps.build.outcome == 'failure'
         run: |
           echo "❌ Build failed - this may be due to network connectivity or resource constraints"
-          echo "In a real development environment, ensure Docker daemon is running and has internet access"
           exit 1
 
       # Summary report
