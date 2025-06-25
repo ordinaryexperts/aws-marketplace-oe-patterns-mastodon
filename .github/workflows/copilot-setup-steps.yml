@@ -11,9 +11,9 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  copilot-dev-setup:
+  copilot-setup-steps:
     name: Setup Development Environment
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     
     steps:
       # Checkout the repository
@@ -61,42 +61,6 @@ jobs:
           echo "In a real development environment, ensure Docker daemon is running and has internet access"
           exit 1
 
-      # Run the full test suite using Docker Compose and Taskcat
-      # This includes CDK synthesis and CloudFormation template validation
-      - name: Run test suite
-        id: test
-        if: steps.build.outcome == 'success'
-        run: |
-          echo "Running full test pipeline (CDK synth + Taskcat)..."
-          make test-all
-        continue-on-error: true
-        env:
-          # Note: In actual usage, AWS credentials would be required for Taskcat testing
-          # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-
-      # Report test status
-      - name: Report test status
-        if: steps.test.outcome == 'failure'
-        run: |
-          echo "❌ Test suite failed"
-          echo "This could be due to missing AWS credentials, network issues, or code problems"
-          echo "Check the test output above for specific error details"
-          exit 1
-
-      # Upload test artifacts if available
-      - name: Upload test artifacts
-        if: always() && steps.test.outcome != 'skipped'
-        uses: actions/upload-artifact@v4
-        with:
-          name: copilot-test-outputs
-          path: |
-            test/main-test/taskcat_outputs/
-            test/taskcat_outputs/
-          retention-days: 7
-        continue-on-error: true
-
       # Summary report
       - name: Environment setup summary
         if: always()
@@ -110,13 +74,6 @@ jobs:
             echo "- Build: ✅ Development environment built successfully"
           else
             echo "- Build: ❌ Failed (may require actual Docker environment)"
-          fi
-          if [ "${{ steps.test.outcome }}" = "success" ]; then
-            echo "- Tests: ✅ All tests passed"
-          elif [ "${{ steps.test.outcome }}" = "failure" ]; then
-            echo "- Tests: ❌ Some tests failed"
-          else
-            echo "- Tests: ⏭️ Skipped due to build failure"
           fi
           echo ""
           echo "This environment is now ready for GitHub Copilot to assist with:"
