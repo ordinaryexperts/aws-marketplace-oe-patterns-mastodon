@@ -1,0 +1,126 @@
+# Copilot Development Environment Setup
+# This workflow sets up the development environment for GitHub Copilot to understand
+# and assist with the AWS Marketplace Mastodon project development.
+
+name: Copilot Setup Steps
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  copilot-dev-setup:
+    name: Setup Development Environment
+    runs-on: ubuntu-22.04
+    
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Set up Python environment matching CDK requirements
+      # CDK setup.py specifies Python >=3.6, using 3.11 for modern features
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # Install Docker Compose if not available (usually pre-installed on ubuntu-22.04)
+      - name: Install Docker Compose
+        run: |
+          if ! command -v docker-compose &> /dev/null; then
+            echo "Installing Docker Compose..."
+            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          docker-compose --version
+
+      # Download shared build utilities (common.mk)
+      - name: Update common build utilities
+        run: make update-common
+
+      # Build the development Docker environment
+      # This step may fail in constrained environments due to network/resource limits
+      - name: Build development environment
+        id: build
+        run: |
+          echo "Building development Docker environment..."
+          make build
+        continue-on-error: true
+
+      # Report build status
+      - name: Report build status
+        if: steps.build.outcome == 'failure'
+        run: |
+          echo "❌ Build failed - this may be due to network connectivity or resource constraints"
+          echo "In a real development environment, ensure Docker daemon is running and has internet access"
+          exit 1
+
+      # Run the full test suite using Docker Compose and Taskcat
+      # This includes CDK synthesis and CloudFormation template validation
+      - name: Run test suite
+        id: test
+        if: steps.build.outcome == 'success'
+        run: |
+          echo "Running full test pipeline (CDK synth + Taskcat)..."
+          make test-all
+        continue-on-error: true
+        env:
+          # Note: In actual usage, AWS credentials would be required for Taskcat testing
+          # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+
+      # Report test status
+      - name: Report test status
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "❌ Test suite failed"
+          echo "This could be due to missing AWS credentials, network issues, or code problems"
+          echo "Check the test output above for specific error details"
+          exit 1
+
+      # Upload test artifacts if available
+      - name: Upload test artifacts
+        if: always() && steps.test.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-test-outputs
+          path: |
+            test/main-test/taskcat_outputs/
+            test/taskcat_outputs/
+          retention-days: 7
+        continue-on-error: true
+
+      # Summary report
+      - name: Environment setup summary
+        if: always()
+        run: |
+          echo "## Copilot Development Environment Setup Summary"
+          echo "- Repository: ✅ Checked out"
+          echo "- Python: ✅ ${{ steps.setup-python.outputs.python-version }}"
+          echo "- Docker Compose: ✅ Available"
+          echo "- Common utilities: ✅ Updated"
+          if [ "${{ steps.build.outcome }}" = "success" ]; then
+            echo "- Build: ✅ Development environment built successfully"
+          else
+            echo "- Build: ❌ Failed (may require actual Docker environment)"
+          fi
+          if [ "${{ steps.test.outcome }}" = "success" ]; then
+            echo "- Tests: ✅ All tests passed"
+          elif [ "${{ steps.test.outcome }}" = "failure" ]; then
+            echo "- Tests: ❌ Some tests failed"
+          else
+            echo "- Tests: ⏭️ Skipped due to build failure"
+          fi
+          echo ""
+          echo "This environment is now ready for GitHub Copilot to assist with:"
+          echo "- AWS CDK Python development"
+          echo "- CloudFormation template generation"
+          echo "- Shell scripting for infrastructure automation"
+          echo "- Mastodon deployment configuration"
