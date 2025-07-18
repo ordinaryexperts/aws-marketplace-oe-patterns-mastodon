@@ -4,6 +4,8 @@
 
 * Adding TaskCat tests
 * Upgrade OE Common Constructs to 4.2.4
+* Upgrade Mastodon to 4.4.1
+* Increasing root volume size to 40GB
 
 # 2.1.0
 
