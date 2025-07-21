@@ -32,7 +32,7 @@ else:
         template_version = "CICD"
 
 
-AMI_ID="ami-0fdbab14ef22cd8b7" # ordinary-experts-patterns-mastodon-2.2.0-20250718-0159
+AMI_ID="ami-07e9557c48e140c47" # ordinary-experts-patterns-mastodon-2.2.0-1-g5a17571-20250721-0706
 
 class MastodonStack(Stack):
 
