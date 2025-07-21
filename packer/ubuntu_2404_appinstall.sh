@@ -13,8 +13,8 @@ rm $SCRIPT_PREINSTALL
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
-RUBY_VERSION=3.3.5
-MASTODON_VERSION=4.3.1
+RUBY_VERSION=3.4.4
+MASTODON_VERSION=4.4.1
 
 apt-get update && apt-get upgrade -y
 
