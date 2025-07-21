@@ -117,14 +117,14 @@ class MastodonStack(Stack):
             "Asg",
             additional_iam_role_policies=[asg_update_secret_policy],
             ami_id=AMI_ID,
+            ami_id_param_name_suffix="v220",
             default_instance_type="t3.small",
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],
-            use_graviton = False,
+            use_graviton=False,
             user_data_contents=user_data,
             user_data_variables={
                 "AssetsBucketName": bucket.bucket_name(),
                 "DbSecretArn": db_secret.secret_arn(),
-
                 "Hostname": dns.hostname(),
                 "HostedZoneName": dns.route_53_hosted_zone_name_param.value_as_string,
                 "InstanceSecretName": Aws.STACK_NAME + "/instance/credentials"
