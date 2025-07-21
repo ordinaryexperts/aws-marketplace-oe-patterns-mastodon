@@ -1,7 +1,11 @@
 # Unreleased
 
+# 2.2.0
+
+* Upgrade Mastodon to 4.4.1
 * Adding TaskCat tests
-* Upgrade OE Common Constructs to 4.1.4
+* Increasing root volume size to 40GB
+* Upgrade OE Common Constructs to 4.2.6
 
 # 2.1.0
 
