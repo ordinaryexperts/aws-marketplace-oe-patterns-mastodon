@@ -13,8 +13,8 @@ rm $SCRIPT_PREINSTALL
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
-RUBY_VERSION=3.4.4
-MASTODON_VERSION=4.4.1
+RUBY_VERSION=3.4.7
+MASTODON_VERSION=4.5.0
 
 apt-get update && apt-get upgrade -y
 
@@ -22,7 +22,7 @@ apt-get update && apt-get upgrade -y
 apt-get install -y curl wget gnupg apt-transport-https lsb-release ca-certificates
 
 # Node.js
-curl -sL https://deb.nodesource.com/setup_20.x | bash -
+curl -sL https://deb.nodesource.com/setup_24.x | bash -
 
 # System packages
 apt install -y \

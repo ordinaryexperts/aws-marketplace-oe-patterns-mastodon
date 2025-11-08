@@ -21,6 +21,21 @@ All development is done inside Docker containers via docker-compose to ensure co
 
 **Never run CDK, Packer, or other build commands directly on the host.** Always use `make` targets which wrap docker-compose.
 
+### Using AWS Profiles
+
+The `~/.aws` directory is mounted into the container, so you can use AWS profiles directly:
+
+```bash
+AWS_PROFILE=oe-patterns-dev make ami-ec2-build
+AWS_PROFILE=oe-patterns-dev make deploy
+```
+
+Alternatively, you can export the profile:
+```bash
+export AWS_PROFILE=oe-patterns-dev
+make ami-ec2-build
+```
+
 ## Common Commands
 
 ### Build and Setup

@@ -1,5 +1,13 @@
 # Unreleased
 
+* Upgrade Mastodon to 4.5.0
+* Upgrade Node.js to 24 LTS (required by Mastodon 4.5.0)
+* Upgrade Ruby to 3.4.7 (required by Mastodon 4.5.0)
+* Improve AWS profile support in docker-compose - mount ~/.aws directory and pass AWS_PROFILE
+* Update oe-patterns-cdk-common to feature/upgrade-postgres branch (Aurora PostgreSQL 15.13, was 15.4)
+* Add AWS Marketplace automation script for submitting new versions via Catalog API
+* Note: Mastodon 4.5.0 requires Redis 7.0+ and PostgreSQL 14+ (verify ElastiCache version)
+
 # 2.2.0
 
 * Upgrade Mastodon to 4.4.1
