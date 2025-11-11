@@ -1,5 +1,7 @@
 # Unreleased
 
+# 2.3.0
+
 * Upgrade Mastodon to 4.5.0
 * Upgrade Node.js to 24 LTS (required by Mastodon 4.5.0)
 * Upgrade Ruby to 3.4.7 (required by Mastodon 4.5.0)
