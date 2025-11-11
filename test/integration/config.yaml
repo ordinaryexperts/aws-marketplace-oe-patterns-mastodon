@@ -1,0 +1,33 @@
+# Integration Test Configuration
+# Override values via environment variables: TEST_BASE_URL, TEST_STACK_NAME, etc.
+
+# Application-specific configuration
+application:
+  name: "Mastodon"
+  health_endpoint: "/health"
+  health_expected_response: "OK"  # Mastodon returns plain text, not JSON
+  version_endpoint: "/api/v2/instance"
+  version_field: "version"
+  expected_version: "4.5.0"
+
+# AWS Configuration
+aws:
+  region: "us-east-1"
+  stack_name: "oe-patterns-mastodon-dylan"
+
+# Test Configuration
+test:
+  timeout: 30
+  retry_attempts: 3
+  retry_delay: 2
+
+# Test URLs (can be overridden by environment variables)
+# TEST_BASE_URL environment variable takes precedence
+urls:
+  base_url: "https://mastodon-dylan.dev.patterns.ordinaryexperts.com"
+
+# Test user configuration for workflow tests
+test_user:
+  username_prefix: "testuser"
+  email_domain: "test.example.com"
+  cleanup_after_test: true

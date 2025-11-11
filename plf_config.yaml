@@ -1,4 +1,11 @@
 ---
+# AWS Marketplace API Configuration
+"Marketplace Access Role ARN": "arn:aws:iam::992593896645:role/AwsMarketplaceAmiIngestion"
+"CloudFormation Parameter Name": "AsgAmiIdv230"
+"Template Base URL": "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/mastodon"
+"Diagram Base URL": "https://ordinaryexperts.com/img/products/mastodon-pattern"
+
+# Product Information
 "Product Slug": "mastodon"
 "Product ID": "d0a98067-9a26-440a-858e-00193a953934"
 "Product Code": "ccpvo40ljyrvfj618djqv3p6c"

@@ -218,8 +218,10 @@ sed -i 's/example.com/${Hostname}/g' /etc/nginx/sites-available/mastodon
 ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon
 service nginx restart
 
-# this is safe to re-run as it will check if the db has already been setup...
-su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup"
+# Database setup: create+migrate for new installs, migrate for upgrades
+# db:setup will fail if database already exists, so we run db:migrate after to handle both cases
+su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:setup" || true
+su - mastodon -c "cd /home/mastodon/live && RAILS_ENV=production /home/mastodon/.rbenv/shims/bundle exec rake db:migrate"
 
 systemctl restart mastodon-web mastodon-sidekiq mastodon-streaming
 success=$?
