@@ -32,7 +32,8 @@ else:
         template_version = "CICD"
 
 
-AMI_ID="ami-0fdbab14ef22cd8b7" # ordinary-experts-patterns-mastodon-2.2.0-20250718-0159
+AMI_ID="ami-0995211b79a27b69d" # ordinary-experts-patterns-mastodon-2.3.0-20251113-0730
+NEXT_RELEASE_PREFIX="v230"
 
 class MastodonStack(Stack):
 
@@ -117,7 +118,7 @@ class MastodonStack(Stack):
             "Asg",
             additional_iam_role_policies=[asg_update_secret_policy],
             ami_id=AMI_ID,
-            ami_id_param_name_suffix="v220",
+            ami_id_param_name_suffix=NEXT_RELEASE_PREFIX,
             default_instance_type="t3.small",
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],
             use_graviton=False,
