@@ -1,5 +1,8 @@
 # Unreleased
 
+* Fix TaskCat tests
+* Upgrade CDK, Packer, TaskCat
+
 # 2.3.0
 
 * Upgrade Mastodon to 4.5.1
