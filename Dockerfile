@@ -1,5 +1,5 @@
-# FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.6.1
-FROM devenv:latest
+FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.8.0
+# FROM devenv:latest
 
 # install dependencies
 RUN mkdir -p /tmp/code/cdk/mastodon
