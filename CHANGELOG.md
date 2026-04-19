@@ -2,6 +2,7 @@
 
 * Fix TaskCat tests
 * Upgrade CDK, Packer, TaskCat
+* Upgrade Mastodon to 4.5.9
 
 # 2.3.0
 

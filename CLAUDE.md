@@ -12,6 +12,10 @@ This is an AWS Marketplace pattern that deploys a production-ready Mastodon inst
 
 The infrastructure includes: VPC, Auto Scaling Groups (EC2), Aurora PostgreSQL, ElastiCache Redis, OpenSearch Service, S3, SES, Route53, ACM, and supporting services (IAM, Secrets Manager, SSM).
 
+## Upgrade Workflow
+
+For upgrading the upstream Mastodon version, follow the process in [aws-marketplace-utilities/UPGRADE.md](https://github.com/ordinaryexperts/aws-marketplace-utilities/blob/main/UPGRADE.md).
+
 ## Development Environment
 
 All development is done inside Docker containers via docker-compose to ensure consistency:
