@@ -5,7 +5,7 @@
 product_id: "d0a98067-9a26-440a-858e-00193a953934"
 
 # IAM role that allows AWS Marketplace to read the AMI
-ami_access_role_arn: "arn:aws:iam::992593896645:role/AwsMarketplaceAmiIngestion"
+ami_access_role_arn: "arn:aws:iam::879777583535:role/AwsMarketplaceAmiIngestion"
 
 # Pattern for the CloudFormation parameter that receives the AMI ID.
 # {version} is the pattern version with dots stripped (e.g. "2.4.0" -> "240").

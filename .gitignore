@@ -31,6 +31,9 @@ dist/*
 # packer manifest file
 manifest.json
 
+# packer build logs
+logs/
+
 # shared Makefiles/scripts
 common.mk
 scripts/common/*
