@@ -5,7 +5,7 @@
 product_id: "d0a98067-9a26-440a-858e-00193a953934"
 
 # IAM role that allows AWS Marketplace to read the AMI
-ami_access_role_arn: "arn:aws:iam::879777583535:role/AwsMarketplaceAmiIngestion"
+ami_access_role_arn: "arn:aws:iam::879777583535:role/AWSMarketplaceAMIScanning"
 
 # Pattern for the CloudFormation parameter that receives the AMI ID.
 # {version} is the pattern version with dots stripped (e.g. "2.4.0" -> "240").
@@ -32,3 +32,31 @@ usage_instructions: >-
   the application servers, find the EC2 instance in the AWS console and
   Connect using the Session Manager option. For more detailed instructions,
   see the GitHub project.
+
+# CloudFormation delivery option details
+delivery_option:
+  short_description: |
+    Deploy a production-ready Mastodon social network on AWS with this CloudFormation template and custom AMI. Provisions VPC, Auto Scaling Group, Aurora PostgreSQL, ElastiCache Redis, OpenSearch, S3, SES, and Route53.
+  long_description: |
+    Mastodon on AWS by FOSSonCloud deploys a production-ready Mastodon instance using AWS best practices.
+
+    WHAT'S DEPLOYED
+
+    - VPC with public and private subnets (or use your existing VPC)
+    - Application Load Balancer with ACM certificate for HTTPS
+    - Auto Scaling Group with EC2 instances running Mastodon
+    - Aurora PostgreSQL cluster (multi-AZ)
+    - ElastiCache Redis cluster (maxmemory-policy: noeviction)
+    - OpenSearch Service domain for full-text search
+    - S3 bucket for user-uploaded media
+    - SES domain identity with Easy DKIM for email delivery
+    - Route53 DNS records
+    - CloudWatch Logs integration
+    - AWS Secrets Manager for credential storage
+    - IAM roles with least-privilege permissions
+
+    REQUIREMENTS
+
+    - Route 53 hosted zone for DNS
+    - ACM certificate for HTTPS
+  architecture_diagram_url: "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/mastodon/2.4.0/diagram.png"

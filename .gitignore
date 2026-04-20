@@ -34,6 +34,9 @@ manifest.json
 # packer build logs
 logs/
 
+# marketplace submission changeset ID
+.marketplace_changeset
+
 # shared Makefiles/scripts
 common.mk
 scripts/common/*
