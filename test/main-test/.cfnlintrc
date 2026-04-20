@@ -1,0 +1,8 @@
+ignore_checks:
+  # From oe_patterns_cdk_common.Vpc.cfn_lint_suppressions()
+  - W1030  # VPC and subnet ID parameters must be String type to support empty defaults (optional parameters)
+  - E1154  # Validate VPC subnet id format - false positive for optional String parameters with allowed_pattern
+  - E1155  # Validate resource ID format - false positive for optional String parameters with allowed_pattern
+
+  # From oe_patterns_cdk_common.Asg.cfn_lint_suppressions()
+  - W1019  # IamRole variable provided by cdk-common for use in user_data, may not be used by all patterns

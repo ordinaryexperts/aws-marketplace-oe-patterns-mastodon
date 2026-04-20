@@ -1,1 +1,8 @@
 -e .
+
+# Pin versions to satisfy taskcat requirements
+jsonschema>=3.0,<4.0
+pathspec==0.10.3
+urllib3<2
+attrs>=25.3.0,<25.5
+typing-extensions>=4.13.2,<5.0

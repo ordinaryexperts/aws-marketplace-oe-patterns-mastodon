@@ -1,4 +1,4 @@
-FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.6.1
+FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.8.2
 # FROM devenv:latest
 
 # install dependencies
@@ -7,5 +7,5 @@ COPY ./cdk/requirements.txt /tmp/code/cdk/
 COPY ./cdk/setup.py /tmp/code/cdk/
 RUN touch /tmp/code/cdk/README.md
 WORKDIR /tmp/code/cdk
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --break-system-packages
 RUN rm -rf /tmp/code

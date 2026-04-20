@@ -13,5 +13,4 @@ tests:
       DnsHostname: "oe-patterns-mastodon-taskcat-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
       DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       OpenSearchServiceCreateServiceLinkedRole: "false"
-      PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
       SesCreateDomainIdentity: "false"

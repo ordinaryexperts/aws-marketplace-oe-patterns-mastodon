@@ -1,5 +1,18 @@
 # Mastodon on AWS
 
+## AWS Marketplace Product
+
+**[Subscribe on AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-fnphbgo3yktrg)**
+
+This product is available on the AWS Marketplace. To use it, you'll need to:
+
+1. **Subscribe**: Visit the [AWS Marketplace product page](https://aws.amazon.com/marketplace/pp/prodview-fnphbgo3yktrg) and click "Continue to Subscribe"
+2. **Accept Terms**: Review and accept the terms and conditions
+3. **Configure**: Click "Continue to Configuration" to select your region and version
+4. **Launch**: Click "Continue to Launch" and choose to launch via CloudFormation
+
+After subscribing, you can launch the CloudFormation template directly from the Marketplace or from your AWS account.
+
 ## Overview
 
 The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation template with a custom AMI which provisions a production-ready [Mastodon](https://joinmastodon.org/) system. It uses the following AWS services:
@@ -17,7 +30,7 @@ The Ordinary Experts Mastodon AWS Marketplace product is a CloudFormation templa
 
 ## Architecture Diagram
 
-![AWS Mastodon Architecture Diagram](docs/mastodon-aws-diagram.png)
+![AWS Mastodon Architecture Diagram](diagram.png)
 
 ## How to deploy
 
@@ -36,7 +49,7 @@ See [this AWS information about the SES sandbox](https://docs.aws.amazon.com/ses
 
 ### Deploying
 
-To deploy, subscribe to the product and then launch the provided CloudFormation template.
+To deploy, [subscribe to the product on AWS Marketplace](#aws-marketplace-product) and then launch the provided CloudFormation template. You can launch directly from the Marketplace interface or use the CloudFormation console.
 
 ### Post-deploy setup
 
