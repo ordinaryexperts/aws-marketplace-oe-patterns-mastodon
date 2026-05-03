@@ -14,7 +14,7 @@ The infrastructure includes: VPC, Auto Scaling Groups (EC2), Aurora PostgreSQL, 
 
 ## Upgrade Workflow
 
-For upgrading the upstream Mastodon version, follow the process in [aws-marketplace-utilities/UPGRADE.md](https://github.com/ordinaryexperts/aws-marketplace-utilities/blob/main/UPGRADE.md).
+For upgrading the upstream Mastodon version, follow the process in [aws-marketplace-utilities/UPGRADE.md](https://github.com/ordinaryexperts/aws-marketplace-utilities/blob/develop/UPGRADE.md).
 
 ## Development Environment
 
