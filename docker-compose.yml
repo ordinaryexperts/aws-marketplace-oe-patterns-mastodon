@@ -13,5 +13,7 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
       - USER
+      - TEST_BASE_URL
+      - TEST_STACK_NAME
   ami:
     build: ./packer

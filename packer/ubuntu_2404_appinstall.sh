@@ -20,8 +20,8 @@ rm $SCRIPT_PREINSTALL
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
-RUBY_VERSION=3.4.7
-MASTODON_VERSION=4.5.9
+RUBY_VERSION=4.0.5
+MASTODON_VERSION=4.6.3
 
 apt-get update && apt-get upgrade -y
 
@@ -77,7 +77,9 @@ cat <<EOF > /etc/rsyslog.d/60-mastodon.conf
 EOF
 
 # set up crons
-crontab -l -u mastodon > /tmp/cron
+# `crontab -l` exits 1 when the user has no existing crontab yet (always true
+# on a fresh AMI build), which set -e would otherwise treat as a hard failure.
+crontab -l -u mastodon > /tmp/cron || true
 echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl media remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
 echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl preview_cards remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
 echo "@hourly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl search deploy --only=instances accounts tags statuses public_statuses >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
