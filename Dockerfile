@@ -1,4 +1,4 @@
-FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.8.2
+FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.8.3
 # FROM devenv:latest
 
 # install dependencies
@@ -9,3 +9,8 @@ RUN touch /tmp/code/cdk/README.md
 WORKDIR /tmp/code/cdk
 RUN pip3 install -r requirements.txt --break-system-packages
 RUN rm -rf /tmp/code
+
+# install integration test dependencies
+COPY ./test/integration/requirements.txt /tmp/test-requirements.txt
+RUN pip3 install -r /tmp/test-requirements.txt --break-system-packages
+RUN rm -f /tmp/test-requirements.txt
