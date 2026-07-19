@@ -1,5 +1,13 @@
 # Unreleased
 
+# 2.5.0
+
+* Upgrade Mastodon to 4.6.3
+* Upgrade Ruby to 4.0.5
+* Upgrade devenv image to 2.8.3
+* Fix packer script build failure caused by `set -eux` + `crontab -l` on fresh installs
+* Fix integration test setup (missing test dependencies in devenv image, missing env var passthrough in docker-compose)
+
 # 2.4.0
 
 * Fix TaskCat tests
