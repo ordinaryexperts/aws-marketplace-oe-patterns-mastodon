@@ -1,3 +1,10 @@
+#!/bin/bash
+# Packer's execute_command invokes this as `bash <path>`, which makes any
+# shebang flags a no-op. Set errexit/nounset/xtrace explicitly so
+# provisioning failures abort the build instead of silently shipping a
+# broken AMI.
+set -eux
+
 SCRIPT_VERSION=1.6.0
 SCRIPT_PREINSTALL=ubuntu_2204_2404_preinstall.sh
 SCRIPT_POSTINSTALL=ubuntu_2204_2404_postinstall.sh
@@ -13,8 +20,8 @@ rm $SCRIPT_PREINSTALL
 #  * https://docs.joinmastodon.org/admin/install/
 #
 
-RUBY_VERSION=3.4.7
-MASTODON_VERSION=4.5.9
+RUBY_VERSION=4.0.5
+MASTODON_VERSION=4.6.3
 
 apt-get update && apt-get upgrade -y
 
@@ -70,7 +77,9 @@ cat <<EOF > /etc/rsyslog.d/60-mastodon.conf
 EOF
 
 # set up crons
-crontab -l -u mastodon > /tmp/cron
+# `crontab -l` exits 1 when the user has no existing crontab yet (always true
+# on a fresh AMI build), which set -e would otherwise treat as a hard failure.
+crontab -l -u mastodon > /tmp/cron || true
 echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl media remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
 echo "@weekly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl preview_cards remove >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
 echo "@hourly RAILS_ENV=production PATH=/home/mastodon/.rbenv/shims:$PATH /home/mastodon/live/bin/tootctl search deploy --only=instances accounts tags statuses public_statuses >> /home/mastodon/live/log/crons.log 2>&1" >> /tmp/cron
