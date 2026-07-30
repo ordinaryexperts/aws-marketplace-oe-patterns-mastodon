@@ -21,7 +21,7 @@ rm $SCRIPT_PREINSTALL
 #
 
 RUBY_VERSION=4.0.5
-MASTODON_VERSION=4.6.3
+MASTODON_VERSION=4.6.4
 
 apt-get update && apt-get upgrade -y
 
