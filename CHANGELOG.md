@@ -1,5 +1,9 @@
 # Unreleased
 
+# 2.6.0
+
+* Upgrade Mastodon to 4.6.4 (security fixes: incorrect permission enforcement, SSRF protection bypass via IPv4-compatible IPv6 addresses; low-risk patch release, no dependency/runtime changes)
+
 # 2.5.0
 
 * Upgrade Mastodon to 4.6.3
