@@ -32,8 +32,8 @@ else:
         template_version = "CICD"
 
 
-AMI_ID="ami-0552ec5ce7bd0ce6b" # ordinary-experts-patterns-mastodon-2.5.0-20260719-0341
-NEXT_RELEASE_PREFIX="v250"
+AMI_ID="ami-09d705c10912317a1" # ordinary-experts-patterns-mastodon-2.6.0-20260730-0829 (prod AMI, for Marketplace submission)
+NEXT_RELEASE_PREFIX="v260"
 
 class MastodonStack(Stack):
 
