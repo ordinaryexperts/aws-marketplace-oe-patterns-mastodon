@@ -1,5 +1,7 @@
 # Unreleased
 
+# 2.7.0
+
 * Upgrade Mastodon to 4.6.6 (bug fixes: emoji search cancellation, oversized profile image crop uploads, media attachment limit enforcement, collection handling, domain block impact queries, webfinger error handling; no dependency/runtime changes)
 
 # 2.6.0
