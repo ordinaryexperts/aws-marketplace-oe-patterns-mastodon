@@ -8,7 +8,7 @@ deploy: build
 	--require-approval never \
 	--parameters AlbCertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters AlbIngressCidr=0.0.0.0/0 \
-	--parameters AsgAmiIdv260=ami-05607bae8bc6e06db \
+	--parameters AsgAmiIdv270=ami-0318274142a45c49c \
 	--parameters AsgReprovisionString=20260730.1 \
 	--parameters DnsHostname=mastodon-${USER}.dev.patterns.ordinaryexperts.com \
 	--parameters DnsRoute53HostedZoneName=dev.patterns.ordinaryexperts.com \
